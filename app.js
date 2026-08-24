@@ -27,6 +27,8 @@ const SAMPLES = {
     followers: 807322, posts: 2400, avgLikes: 900, global: true },
 };
 
+const SAMPLE_HANDLES = Object.keys(SAMPLES);
+
 let state = { platform: 'instagram', account: null, step: 1 };
 let cfg = readCfg();
 
@@ -57,7 +59,15 @@ function writeCfg(next) {
   paintMode();
 }
 function live() { return Boolean(cfg.key && cfg.url); }
-function paintMode() { $('modeBtn').textContent = live() ? 'live API' : 'sample data'; }
+function paintMode() {
+  $('modeBtn').textContent = live() ? 'live API' : 'sample data';
+  const hint = $('modeHint');
+  if (hint) {
+    hint.textContent = live()
+      ? `Live — calling ${cfg.url.replace(/^https?:\/\//, '')}`
+      : 'Sample data. Try daraz.lk, kapruka or pizzahut, or add a key via the header.';
+  }
+}
 
 /** Strip what people actually paste: @ prefixes, full URLs, query strings. */
 function normalize(input) {
@@ -145,13 +155,23 @@ async function verify() {
   $('waitMsg').textContent = live() ? 'Contacting the platform…' : 'Contacting the platform…';
 
   try {
+    // Logged so a failure can be diagnosed from the console rather than guessed at.
+    console.info('[nova] lookup', { mode: live() ? 'live' : 'sample', platform: state.platform, handle });
+
     const account = live()
       ? await lookupLive(state.platform, handle)
       : await lookupSample(state.platform, handle);
 
+    console.info('[nova] result', account);
+
     if (!account) {
       goTo(1);
-      $('err1').textContent = `We couldn't find @${handle} on ${state.platform}. Check the spelling, or paste the profile link.`;
+      // "Not found" means something different in each mode, and conflating them
+      // sent people hunting for a typo when the real answer was "you are on
+      // sample data, which only knows a handful of handles".
+      $('err1').textContent = live()
+        ? `The API looked up @${handle} on ${state.platform} and found no such account.`
+        : `Sample data only knows: ${SAMPLE_HANDLES.filter((h) => h.startsWith(state.platform)).map((h) => '@' + h.split(':')[1]).join(', ')}. Add a key via the header to search for real.`;
       $('err1').hidden = false;
       return;
     }
