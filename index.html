@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="no-referrer">
 <title>Connect your account — Nova Social</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -38,6 +39,18 @@ a:hover{text-decoration:underline}
 .dcx2:hover{border-color:#0F0F14}
 .dcx2:active{transform:scale(.97)}
 @media (prefers-reduced-motion:reduce){*{transition-duration:.01ms!important;animation-duration:.01ms!important}}
+/* The design is laid out for a wide card. Below 640px its side-by-side rows
+   pushed the lookup button and the platform picker outside the card, which
+   clips them with no scrollbar to reach them. */
+@media (max-width:640px){
+  .stage{padding:12px 10px 48px}
+  .pad{padding:28px 18px 32px!important}
+  .row2{flex-wrap:wrap!important}
+  .row2>*{min-width:0}
+  .rowInput{flex-wrap:wrap!important}
+  .rowInput input{flex:1 1 140px!important}
+  .rowInput button{flex:1 1 100%!important}
+}
 </style>
 </head>
 <body>
@@ -61,18 +74,18 @@ a:hover{text-decoration:underline}
       
     </div>
   </div>
-  <div style="padding:56px 80px 64px;min-height:520px;display:flex;flex-direction:column">
+  <div class="pad" style="padding:56px 80px 64px;min-height:520px;display:flex;flex-direction:column">
     <div data-when="isStep1" hidden>
       <div style="display:flex;flex-direction:column;gap:0">
         <div style="font:500 12px/1 'Plus Jakarta Sans',system-ui,sans-serif;color:#9A9AA4">Step 1 of 4</div>
         <h1 style="margin:18px 0 0;font-size:38px;font-weight:200;line-height:1.1;letter-spacing:-.035em;color:#0F0F14">Which account is yours?</h1>
         <p style="margin:14px 0 0;font-size:15px;line-height:1.6;color:#5C5C68;max-width:44ch">Tell us the handle you post from. We will look it up and show you what we found before anything is tracked.</p>
-        <div style="display:flex;gap:10px;margin:32px 0 0">
+        <div class="row2" style="display:flex;gap:10px;margin:32px 0 0">
           <button class="dcx5" data-action="pickInstagram" style="font-family:inherit;display:inline-flex;align-items:center;gap:9px;font-size:14px;font-weight:600;color:#0F0F14;border-radius:14px;padding:12px 20px;cursor:pointer;transition:all 340ms cubic-bezier(0.16,1,0.3,1);background: rgba(221,42,123,.07);border:1px solid rgba(221,42,123,.45)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" style="flex:none"><defs><linearGradient id="igPick" x1="2" y1="22" x2="22" y2="2" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#FDCB52"></stop><stop offset=".3" stop-color="#F5811F"></stop><stop offset=".6" stop-color="#DD2A7B"></stop><stop offset="1" stop-color="#8134AF"></stop></linearGradient></defs><rect x="3" y="3" width="18" height="18" rx="5.4" stroke="url(#igPick)" stroke-width="1.9"></rect><circle cx="12" cy="12" r="4.1" stroke="url(#igPick)" stroke-width="1.9"></circle><circle cx="17.3" cy="6.7" r="1.1" fill="#DD2A7B"></circle></svg>Instagram</button>
           <button class="dcx6" data-action="pickTikTok" style="font-family:inherit;display:inline-flex;align-items:center;gap:9px;font-size:14px;font-weight:600;color:#0F0F14;border-radius:14px;padding:12px 20px;cursor:pointer;transition:all 340ms cubic-bezier(0.16,1,0.3,1);background: #FFFFFF;border:1px solid #E8E8EC"><svg width="17" height="17" viewBox="0 0 24 24" style="flex:none"><path d="M16.6 2h-3.1v12.1a2.6 2.6 0 1 1-1.9-2.5V8.5a5.8 5.8 0 1 0 5 5.7V9.1a5.6 5.6 0 0 0 3.2 1V7a3.6 3.6 0 0 1-3.2-3.4V2Z" fill="#25F4EE" transform="translate(-1.4,-1)"></path><path d="M16.6 2h-3.1v12.1a2.6 2.6 0 1 1-1.9-2.5V8.5a5.8 5.8 0 1 0 5 5.7V9.1a5.6 5.6 0 0 0 3.2 1V7a3.6 3.6 0 0 1-3.2-3.4V2Z" fill="#FE2C55" transform="translate(1.4,1)"></path><path d="M16.6 2h-3.1v12.1a2.6 2.6 0 1 1-1.9-2.5V8.5a5.8 5.8 0 1 0 5 5.7V9.1a5.6 5.6 0 0 0 3.2 1V7a3.6 3.6 0 0 1-3.2-3.4V2Z" fill="#0F0F14"></path></svg>TikTok</button>
           <button class="dcx7" data-action="pickYouTube" style="font-family:inherit;display:inline-flex;align-items:center;gap:9px;font-size:14px;font-weight:600;color:#0F0F14;border-radius:14px;padding:12px 20px;cursor:pointer;transition:all 340ms cubic-bezier(0.16,1,0.3,1);background: #FFFFFF;border:1px solid #E8E8EC"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" style="flex:none"><rect x="2.4" y="5.4" width="19.2" height="13.2" rx="4" fill="#FF0000"></rect><path d="M10.4 9.2l4.8 2.8-4.8 2.8V9.2Z" fill="#FFFFFF"></path></svg>YouTube</button>
         </div>
-        <div style="display:flex;align-items:center;gap:2px;margin:20px 0 0;border:1px solid #E8E8EC;border-radius:14px;padding:4px 4px 4px 16px;background:#FFFFFF">
+        <div class="rowInput" style="display:flex;align-items:center;gap:2px;margin:20px 0 0;border:1px solid #E8E8EC;border-radius:14px;padding:4px 4px 4px 16px;background:#FFFFFF">
           <span style="font:400 15px 'Plus Jakarta Sans',system-ui,sans-serif;color:#9A9AA4">@</span>
           <input value="kandos.lk" onChange="onHandle" placeholder="yourbrand" style="flex:1 1 0;font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:15px;color:#0F0F14;border:none;outline:none;padding:12px 8px;background:none">
           <button class="dcx8" data-action="onLookup" style="font-family:inherit;font-size:14px;font-weight:600;color:#FFFFFF;background:#4F46E5;border:none;border-radius:12px;padding:12px 22px;cursor:pointer;transition:background 340ms cubic-bezier(0.16,1,0.3,1)">Look it up</button>
@@ -83,10 +96,10 @@ a:hover{text-decoration:underline}
     <div data-when="isStep2" hidden>
       <div style="display:flex;flex-direction:column;gap:0">
         <div style="font:500 12px/1 'Plus Jakarta Sans',system-ui,sans-serif;color:#9A9AA4">Step 2 of 4</div>
-        <h1 style="margin:18px 0 0;font-size:38px;font-weight:200;line-height:1.1;letter-spacing:-.035em;color:#0F0F14">Looking up @kandos.lk</h1>
+        <h1 style="margin:18px 0 0;font-size:38px;font-weight:200;line-height:1.1;letter-spacing:-.035em;color:#0F0F14">Looking up <span data-bind="handleAt">@kandos.lk</span></h1>
         <div style="display:flex;align-items:center;gap:10px;margin:16px 0 0">
           <span style="width:8px;height:8px;border-radius:999px;background:#4F46E5;animation:novaBreathe 1600ms ease-in-out infinite"></span>
-          <span style="font-size:14px;color:#5C5C68">Reading the public profile on Instagram</span>
+          <span style="font-size:14px;color:#5C5C68">Reading the public profile on <span data-bind="platform">Instagram</span></span>
         </div>
         <div style="margin:36px 0 0;border:1px solid #E8E8EC;border-radius:22px;padding:28px">
           <div style="display:flex;align-items:center;gap:16px">
@@ -96,7 +109,7 @@ a:hover{text-decoration:underline}
               <div style="height:12px;width:28%;border-radius:999px;background:#FAFAFB"></div>
             </div>
           </div>
-          <div style="display:flex;gap:12px;margin:26px 0 0">
+          <div class="row2" style="display:flex;gap:12px;margin:26px 0 0">
             <div style="flex:1 1 0;height:64px;border-radius:14px;background:#FAFAFB"></div>
             <div style="flex:1 1 0;height:64px;border-radius:14px;background:#FAFAFB"></div>
             <div style="flex:1 1 0;height:64px;border-radius:14px;background:#FAFAFB"></div>
@@ -118,34 +131,52 @@ a:hover{text-decoration:underline}
             <p style="margin:0;font-size:14px;line-height:1.6;color:#0F0F14;max-width:52ch">This looks like the global account rather than a Sri Lankan one. If you have a local account, use that instead — or carry on if this is the one you post from.</p>
           </div>
         </div>
-        <div style="margin:24px 0 0;border:1px solid #E8E8EC;border-radius:22px;padding:28px">
+        <div data-when="showSample">
+          <div style="display:flex;align-items:center;gap:8px;margin:24px 0 0;border:1px solid #E8E8EC;border-radius:14px;padding:12px 16px;background:#FAFAFB">
+            <span style="width:7px;height:7px;border-radius:999px;background:#9A9AA4;flex:none"></span>
+            <span style="font-size:13px;color:#5C5C68">Captured view — no live lookup ran. Add <b>#key=…</b> to the URL to check this handle for real.</span>
+          </div>
+        </div>
+        <div data-when="showNotFound">
+          <div style="margin:24px 0 0;border:1px solid #E8E8EC;border-radius:22px;padding:28px">
+            <div style="font-size:17px;font-weight:600;color:#0F0F14">No account with that handle</div>
+            <p style="margin:10px 0 0;font-size:14px;line-height:1.6;color:#5C5C68;max-width:52ch">We looked on <span data-bind="platform">Instagram</span> for <span data-bind="handleAt">@yourbrand</span> and found nothing public. Check the spelling, or pick a different platform.</p>
+          </div>
+        </div>
+        <div data-when="showFailed">
+          <div style="margin:24px 0 0;border:1px solid #E8E8EC;border-radius:22px;padding:28px">
+            <div style="font-size:17px;font-weight:600;color:#8A6100">The lookup did not finish</div>
+            <p style="margin:10px 0 0;font-size:14px;line-height:1.6;color:#5C5C68;max-width:52ch"><span data-bind="lookupError">Something went wrong.</span> Nothing has been tracked. Try again in a moment.</p>
+          </div>
+        </div>
+        <div data-when="showAccount" style="margin:24px 0 0;border:1px solid #E8E8EC;border-radius:22px;padding:28px">
           <div style="display:flex;align-items:center;gap:16px">
-            <div style="width:56px;height:56px;border-radius:999px;background:rgba(79,70,229,.10);display:grid;place-items:center;font-size:19px;font-weight:600;color:#4F46E5;flex:none">K</div>
+            <div data-bind="initial" style="width:56px;height:56px;border-radius:999px;background:rgba(79,70,229,.10);display:grid;place-items:center;font-size:19px;font-weight:600;color:#4F46E5;flex:none">K</div>
             <div style="flex:1 1 0">
               <div style="display:flex;align-items:center;gap:8px">
-                <span style="font-size:17px;font-weight:600;letter-spacing:-.01em;color:#0F0F14">Kandos</span>
-                <span title="Verified by the platform" style="display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;border-radius:999px;background:#4F46E5;flex:none"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></span>
+                <span data-bind="displayName" style="font-size:17px;font-weight:600;letter-spacing:-.01em;color:#0F0F14">Kandos</span>
+                <span data-bind="verifiedTick" hidden title="Verified by the platform" style="display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;border-radius:999px;background:#4F46E5;flex:none"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></span>
               </div>
-              <div style="margin:4px 0 0;font:400 13.5px 'Plus Jakarta Sans',system-ui,sans-serif;color:#5C5C68">@kandos.lk · Instagram</div>
+              <div data-bind="handleLine" style="margin:4px 0 0;font:400 13.5px 'Plus Jakarta Sans',system-ui,sans-serif;color:#5C5C68">@kandos.lk · Instagram</div>
             </div>
           </div>
-          <div style="display:flex;gap:12px;margin:26px 0 0">
+          <div class="row2" style="display:flex;gap:12px;margin:26px 0 0">
             <div style="flex:1 1 0;border:1px solid #E8E8EC;border-radius:14px;padding:14px 16px">
               <div style="font:500 12px 'Plus Jakarta Sans',system-ui,sans-serif;color:#9A9AA4">Followers</div>
-              <div style="margin:8px 0 0;font:500 22px 'Plus Jakarta Sans',system-ui,sans-serif;font-variant-numeric:tabular-nums;color:#0F0F14">48,210</div>
+              <div data-bind="followers" style="margin:8px 0 0;font:500 22px 'Plus Jakarta Sans',system-ui,sans-serif;font-variant-numeric:tabular-nums;color:#0F0F14">48,210</div>
             </div>
             <div style="flex:1 1 0;border:1px solid #E8E8EC;border-radius:14px;padding:14px 16px">
               <div style="font:500 12px 'Plus Jakarta Sans',system-ui,sans-serif;color:#9A9AA4">Posts</div>
-              <div style="margin:8px 0 0;font:500 22px 'Plus Jakarta Sans',system-ui,sans-serif;font-variant-numeric:tabular-nums;color:#0F0F14">1,284</div>
+              <div data-bind="posts" style="margin:8px 0 0;font:500 22px 'Plus Jakarta Sans',system-ui,sans-serif;font-variant-numeric:tabular-nums;color:#0F0F14">1,284</div>
             </div>
             <div style="flex:1 1 0;border:1px solid #E8E8EC;border-radius:14px;padding:14px 16px">
               <div style="font:500 12px 'Plus Jakarta Sans',system-ui,sans-serif;color:#9A9AA4">Location</div>
-              <div style="margin:8px 0 0;font-size:15px;font-weight:500;color:#0F0F14">Colombo, LK</div>
+              <div data-bind="location" style="margin:8px 0 0;font-size:15px;font-weight:500;color:#0F0F14">Colombo, LK</div>
             </div>
           </div>
         </div>
-        <div style="display:flex;align-items:center;gap:14px;margin:28px 0 0">
-          <button class="dcx9" data-action="onConfirm" style="font-family:inherit;font-size:14px;font-weight:600;color:#FFFFFF;background:#4F46E5;border:none;border-radius:14px;padding:14px 26px;cursor:pointer;transition:background 340ms cubic-bezier(0.16,1,0.3,1)">Yes, track this account</button>
+        <div class="row2" style="display:flex;align-items:center;gap:14px;margin:28px 0 0">
+          <button class="dcx9" data-when="showAccount" data-action="onConfirm" style="font-family:inherit;font-size:14px;font-weight:600;color:#FFFFFF;background:#4F46E5;border:none;border-radius:14px;padding:14px 26px;cursor:pointer;transition:background 340ms cubic-bezier(0.16,1,0.3,1)">Yes, track this account</button>
           <button class="dcx10" data-action="onBack1" style="font-family:inherit;font-size:14px;font-weight:600;color:#0F0F14;background:#FFFFFF;border:1px solid #E8E8EC;border-radius:14px;padding:14px 24px;cursor:pointer;transition:border-color 340ms cubic-bezier(0.16,1,0.3,1)">Try another handle</button>
         </div>
       </div>
@@ -154,11 +185,11 @@ a:hover{text-decoration:underline}
       <div style="display:flex;flex-direction:column;gap:0">
         <div style="font:500 12px/1 'Plus Jakarta Sans',system-ui,sans-serif;color:#9A9AA4">Step 4 of 4</div>
         <h1 style="margin:18px 0 0;font-size:38px;font-weight:200;line-height:1.1;letter-spacing:-.035em;color:#0F0F14">Tracking started.</h1>
-        <p style="margin:14px 0 0;font-size:15px;line-height:1.6;color:#5C5C68;max-width:46ch">We took the first snapshot of @kandos.lk just now. History builds from today — the platforms keep almost none, so this record is yours.</p>
-        <div style="display:flex;gap:12px;margin:32px 0 0">
+        <p style="margin:14px 0 0;font-size:15px;line-height:1.6;color:#5C5C68;max-width:46ch">We took the first snapshot of <span data-bind="handleAt">@kandos.lk</span> just now. History builds from today — the platforms keep almost none, so this record is yours.</p>
+        <div class="row2" style="display:flex;gap:12px;margin:32px 0 0">
           <div style="flex:1 1 0;border:1px solid #E8E8EC;border-radius:18px;padding:20px">
             <div style="font:500 12px 'Plus Jakarta Sans',system-ui,sans-serif;color:#9A9AA4">First snapshot</div>
-            <div style="margin:10px 0 0;font:500 20px 'Plus Jakarta Sans',system-ui,sans-serif;font-variant-numeric:tabular-nums;color:#0F0F14">48,210</div>
+            <div data-bind="followers" style="margin:10px 0 0;font:500 20px 'Plus Jakarta Sans',system-ui,sans-serif;font-variant-numeric:tabular-nums;color:#0F0F14">48,210</div>
             <div style="margin:4px 0 0;font-size:13px;color:#5C5C68">followers, today 09:14</div>
           </div>
           <div style="flex:1 1 0;border:1px solid #E8E8EC;border-radius:18px;padding:20px">
@@ -167,8 +198,8 @@ a:hover{text-decoration:underline}
             <div style="margin:4px 0 0;font-size:13px;color:#5C5C68">daily, automatic</div>
           </div>
         </div>
-        <div style="display:flex;align-items:center;gap:14px;margin:32px 0 0">
-          <a class="dcx11" href="#1c" style="font-size:14px;font-weight:600;color:#FFFFFF;background:#4F46E5;border-radius:14px;padding:14px 26px;transition:background 340ms cubic-bezier(0.16,1,0.3,1)">Go to the dashboard</a>
+        <div class="row2" style="display:flex;align-items:center;gap:14px;margin:32px 0 0">
+          <a class="dcx11" href="./dashboard.html" data-action="goDashboard" style="font-size:14px;font-weight:600;color:#FFFFFF;background:#4F46E5;border-radius:14px;padding:14px 26px;transition:background 340ms cubic-bezier(0.16,1,0.3,1)">Go to the dashboard</a>
           <button class="dcx12" data-action="onBack1" style="font-family:inherit;font-size:14px;font-weight:600;color:#0F0F14;background:#FFFFFF;border:1px solid #E8E8EC;border-radius:14px;padding:14px 24px;cursor:pointer;transition:border-color 340ms cubic-bezier(0.16,1,0.3,1)">Add another account</button>
         </div>
       </div>
@@ -178,8 +209,8 @@ a:hover{text-decoration:underline}
     <span style="font-size:12px;color:#9A9AA4">© 2026 Nova Studio · Colombo</span>
     <span style="font-size:12px;color:#9A9AA4">We read only what the account shows publicly · <a href="#1a" style="color:#5C5C68;text-decoration:none">Privacy</a></span>
 </div></div>
-<script src="./api.js?v=1787585643"></script>
-<script src="./daraz.js?v=1787585643"></script>
-<script src="./connect.js?v=1787585643"></script>
+<script src="./api.js?v=1787589152"></script>
+<script src="./daraz.js?v=1787589152"></script>
+<script src="./connect.js?v=1787589152"></script>
 </body>
 </html>

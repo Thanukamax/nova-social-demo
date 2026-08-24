@@ -14,8 +14,31 @@ const $ = (id) => document.getElementById(id);
 const QUEUE = window.NOVA_REVIEW || [];
 const STORE = 'nova.review.decisions';
 
-let decisions = {};
-try { decisions = JSON.parse(localStorage.getItem(STORE) || '{}'); } catch { decisions = {}; }
+// Every field on a review row (displayName, handle, signal text) is the found
+// account's own data — an attacker can name their Instagram account
+// `<img src=x onerror=…>`. These land in innerHTML below, so anything
+// interpolated into markup MUST be escaped or it runs as script in the
+// reviewer's browser on this origin.
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => (
+  { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+));
+
+/**
+ * `JSON.parse('null')` succeeds and returns null, so parse-with-fallback lets a
+ * stored "null" through; every later `decisions[key]` read then throws, render
+ * never runs, and the page cannot even draw the button that would clear it.
+ * Accept only a plain object.
+ */
+function readDecisions() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(STORE) || '{}');
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+let decisions = readDecisions();
 
 const pending = () => QUEUE.filter((i) => !decisions[key(i)]);
 const key = (i) => `${i.platform}:${i.brand}:${i.handle}`;
@@ -37,9 +60,12 @@ function paintProgress() {
 }
 
 function profileUrl(item) {
+  // Encoded, not interpolated: a handle is the account's own text and may carry
+  // `/`, `?` or a quote, any of which changes what the link points at.
+  const handle = encodeURIComponent(String(item.handle ?? ''));
   return item.platform === 'tiktok'
-    ? `https://www.tiktok.com/@${item.handle}`
-    : `https://www.instagram.com/${item.handle}/`;
+    ? `https://www.tiktok.com/@${handle}`
+    : `https://www.instagram.com/${handle}/`;
 }
 
 function render() {
@@ -49,32 +75,35 @@ function render() {
 
   // Warnings first: the doubt is the thing being resolved, so it leads.
   const order = { warn: 0, good: 1, neutral: 2 };
-  const sig = [...item.signals].sort((a, b) => order[a.kind] - order[b.kind]);
+  const sig = [...(Array.isArray(item.signals) ? item.signals : [])]
+    .sort((a, b) => (order[a.kind] ?? 2) - (order[b.kind] ?? 2));
 
+  // `s.kind` is compared against a fixed set for ordering, but it is still
+  // account-derived data going into a class attribute — escape it too.
   $('stage').innerHTML = `
     <div class="card">
       <div class="compare">
         <div class="side">
           <h2>Brand on Nova</h2>
-          <p class="brandname">${item.brand}</p>
+          <p class="brandname">${esc(item.brand)}</p>
           <span class="from">from the brand directory · no account confirmed yet</span>
         </div>
         <div class="vs"></div>
         <div class="side found">
-          <h2>Account we found · ${item.platform}</h2>
+          <h2>Account we found · ${esc(item.platform)}</h2>
           <div class="acct">
-            <div class="av">${initials(item.displayName || item.handle)}</div>
+            <div class="av">${esc(initials(item.displayName || item.handle))}</div>
             <div>
-              <b>${item.displayName || '—'}${item.verified ? '<span class="tick">verified</span>' : ''}</b>
-              <span>@${item.handle}</span>
+              <b>${esc(item.displayName || '—')}${item.verified ? '<span class="tick">verified</span>' : ''}</b>
+              <span>@${esc(item.handle)}</span>
             </div>
           </div>
           <div class="figs">
-            <div class="fig"><span class="n">${fmt(item.followers)}</span><span class="k">Followers</span></div>
-            <div class="fig"><span class="n">${item.score}</span><span class="k">Match score</span></div>
+            <div class="fig"><span class="n">${esc(fmt(item.followers))}</span><span class="k">Followers</span></div>
+            <div class="fig"><span class="n">${esc(item.score)}</span><span class="k">Match score</span></div>
           </div>
           <ul class="sig">
-            ${sig.map((s) => `<li class="${s.kind}"><span class="m"></span><span>${s.text}</span></li>`).join('')}
+            ${sig.map((s) => `<li class="${esc(s.kind)}"><span class="m"></span><span>${esc(s.text)}</span></li>`).join('')}
           </ul>
         </div>
       </div>
@@ -82,13 +111,23 @@ function render() {
         <button class="yes" id="yes">Yes, same company<kbd>Y</kbd></button>
         <button class="no" id="no">No, wrong account<kbd>N</kbd></button>
         <button class="skip" id="skip">Decide later<kbd>S</kbd></button>
-        <a class="open" href="${profileUrl(item)}" target="_blank" rel="noopener noreferrer">Open the profile ↗</a>
+        <a class="open" href="${esc(profileUrl(item))}" target="_blank" rel="noopener noreferrer">Open the profile ↗</a>
       </div>
     </div>`;
 
   $('yes').onclick = () => decide(item, 'accepted');
   $('no').onclick = () => decide(item, 'rejected');
   $('skip').onclick = () => skip(item);
+
+  // With one item left there is nothing to move it behind: the old code spliced
+  // it out, pushed it back to the same index and redrew the identical card, so
+  // the button looked broken. Say why it cannot be used instead.
+  if (pending().length === 1) {
+    $('skip').disabled = true;
+    $('skip').style.opacity = '.45';
+    $('skip').style.cursor = 'not-allowed';
+    $('skip').title = 'This is the last one left — decide it, or come back later.';
+  }
 }
 
 let skipped = [];
@@ -101,6 +140,7 @@ function decide(item, verdict) {
 }
 
 function skip(item) {
+  if (pending().length < 2) return;
   // Move to the back rather than marking it done — "later" is not a decision,
   // and silently dropping it would leave the brand unresolved with no trace.
   const i = QUEUE.indexOf(item);
@@ -128,7 +168,7 @@ function renderDone() {
         <div class="rejected"><span class="n">${rejected.length}</span><span class="k">Rejected</span></div>
         <div><span class="n">${QUEUE.length}</span><span class="k">Reviewed</span></div>
       </div>
-      <pre id="out">${JSON.stringify(all, null, 2)}</pre>
+      <pre id="out">${esc(JSON.stringify(all, null, 2))}</pre>
     </div>`;
 
   $('copy').onclick = async () => {

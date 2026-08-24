@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="no-referrer">
 <title>Request access — Nova Social</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -20,12 +21,21 @@ a:hover{text-decoration:underline}
 .dcx1:hover{background:#4338CA}
 .dcx1:active{transform:scale(.97)}
 @media (prefers-reduced-motion:reduce){*{transition-duration:.01ms!important;animation-duration:.01ms!important}}
+/* Two inputs to a row does not fit a phone: at 375px the second one sat
+   outside the card, and the card clips overflow, so it could not be reached
+   or scrolled to. */
+@media (max-width:640px){
+  .stage{padding:12px 10px 48px}
+  .pad{padding:28px 18px 32px!important}
+  .row2{flex-wrap:wrap!important}
+  .row2>*{min-width:0;flex:1 1 220px!important}
+}
 </style>
 </head>
 <body>
 <div class="stage"><div class="card">
 
-  <div style="padding:48px 56px 44px">
+  <div class="pad" style="padding:48px 56px 44px">
     <div style="display:flex;align-items:center;gap:10px">
       <span style="width:28px;height:28px;border-radius:8px;background:#4F46E5;display:grid;place-items:center;flex:none"><svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M21.6 3 4.4 10.8l6.3 2.1 2.1 6.3L21.6 3Z" fill="#FFFFFF"></path><path d="M21.6 3 10.7 12.9" stroke="#4F46E5" stroke-width="1.25" stroke-linecap="round"></path><path d="M2.4 15.6h4M4.6 18.9h2.6" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" opacity=".72"></path></svg></span>
       <span style="font-size:18px;font-weight:700;letter-spacing:-.02em;color:#0F0F14">nova</span>
@@ -39,7 +49,7 @@ a:hover{text-decoration:underline}
         <span style="font-size:12.5px;font-weight:500;color:#5C5C68">Company name</span>
         <input type="text" placeholder="Ceylon Biscuits Limited" style="font-family:inherit;font-size:14.5px;color:#0F0F14;background:#FFFFFF;border:1px solid #E8E8EC;border-radius:14px;padding:13px 15px;outline:none;transition:border-color 340ms cubic-bezier(0.16,1,0.3,1)" style-focus="border-color:#4F46E5">
       </label>
-      <div style="display:flex;gap:16px">
+      <div class="row2" style="display:flex;gap:16px">
       <label style="display:flex;flex-direction:column;gap:7px;flex:1 1 0">
         <span style="font-size:12.5px;font-weight:500;color:#5C5C68">Company registration no.</span>
         <input type="text" placeholder="PV 12345" style="font-family:inherit;font-size:14.5px;color:#0F0F14;background:#FFFFFF;border:1px solid #E8E8EC;border-radius:14px;padding:13px 15px;outline:none;transition:border-color 340ms cubic-bezier(0.16,1,0.3,1)" style-focus="border-color:#4F46E5">
@@ -49,7 +59,7 @@ a:hover{text-decoration:underline}
         <input type="email" placeholder="you@company.lk" style="font-family:inherit;font-size:14.5px;color:#0F0F14;background:#FFFFFF;border:1px solid #E8E8EC;border-radius:14px;padding:13px 15px;outline:none;transition:border-color 340ms cubic-bezier(0.16,1,0.3,1)" style-focus="border-color:#4F46E5">
       </label>
       </div>
-      <div style="display:flex;gap:16px">
+      <div class="row2" style="display:flex;gap:16px">
       <label style="display:flex;flex-direction:column;gap:7px;flex:1 1 0">
         <span style="font-size:12.5px;font-weight:500;color:#5C5C68">Your name</span>
         <input type="text" placeholder="Saumya de Alwis" style="font-family:inherit;font-size:14.5px;color:#0F0F14;background:#FFFFFF;border:1px solid #E8E8EC;border-radius:14px;padding:13px 15px;outline:none;transition:border-color 340ms cubic-bezier(0.16,1,0.3,1)" style-focus="border-color:#4F46E5">
@@ -60,11 +70,11 @@ a:hover{text-decoration:underline}
       </label>
       </div>
     </div>
-    <div style="display:flex;align-items:center;gap:16px;margin:28px 0 0">
+    <div class="row2" style="display:flex;align-items:center;gap:16px;margin:28px 0 0">
       <button class="dcx1" style="font-family:inherit;font-size:14.5px;font-weight:600;color:#FFFFFF;background:#4F46E5;border:none;border-radius:14px;padding:14px 26px;cursor:pointer;transition:background 340ms cubic-bezier(0.16,1,0.3,1)" data-go="./signin.html">Send request</button>
       <span style="font-size:13px;line-height:1.55;color:#9A9AA4;max-width:34ch">Used only to verify the company. Nothing is posted anywhere.</span>
     </div>
-    <div style="margin:28px 0 0;padding:18px 0 0;border-top:1px solid #E8E8EC;font-size:13.5px;color:#5C5C68">Already have an account? <a href="#1f" style="font-weight:600;color:#4F46E5;text-decoration:none">Sign in</a></div>
+    <div style="margin:28px 0 0;padding:18px 0 0;border-top:1px solid #E8E8EC;font-size:13.5px;color:#5C5C68">Already have an account? <a href="./signin.html" data-go="./signin.html" style="font-weight:600;color:#4F46E5;text-decoration:none">Sign in</a></div>
   </div>
   <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;padding:15px 24px;border-top:1px solid #E8E8EC">
     <span style="font-size:12px;color:#9A9AA4">© 2026 Nova Studio · Colombo</span>
@@ -77,6 +87,6 @@ a:hover{text-decoration:underline}
 <p class="dv-next">Unbuilt from section 5 of the brief, in the order it ranks them: the review queue (compare-and-decide for the 12 ambiguous brands), connection states (revoked, expiring, silent failure), and a tier-legibility system beyond the single chip. Say which one next.</p>
 
 </div></div>
-<script src="./nav.js?v=1787585643"></script>
+<script src="./nav.js?v=1787589152"></script>
 </body>
 </html>

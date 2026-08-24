@@ -14,14 +14,45 @@ const PLATFORM_TINT = {
   YouTube:   { bg: 'rgba(255,0,0,.06)',    bd: 'rgba(255,0,0,.42)' },
 };
 
-const state = { step: 1, handle: 'kandos.lk', platform: 'Instagram', warn: false };
+/**
+ * `mode` is what step 3 is actually showing.
+ *
+ * It used to have none: step 3 was a fixed card reading "Kandos · verified ·
+ * 48,210 followers", and both the success and the failure path landed on it.
+ * A handle that does not exist, and a lookup that never answered, both ended
+ * with the flow confirming a stranger's account as yours.
+ */
+const state = {
+  step: 1,
+  handle: 'kandos.lk',
+  platform: 'Instagram',
+  warn: false,
+  mode: 'sample',       // sample | found | notfound | failed
+  account: null,
+  error: '',
+};
 let lookupTimer = null;
+let lookupSeq = 0;
+
+const fmt = (n) => (typeof n === 'number' && Number.isFinite(n) ? n.toLocaleString('en-US') : '—');
+const initial = (s) => (String(s || '?').trim()[0] || '?').toUpperCase();
+
+function flags() {
+  const onThree = state.step === 3;
+  return {
+    showWarn: onThree && state.warn,
+    showAccount: onThree && (state.mode === 'found' || state.mode === 'sample'),
+    showSample: onThree && state.mode === 'sample',
+    showNotFound: onThree && state.mode === 'notfound',
+    showFailed: onThree && state.mode === 'failed',
+  };
+}
 
 function paint() {
+  const on = flags();
   qa('[data-when]').forEach((el) => {
     const want = el.dataset.when;
-    const on = want === `isStep${state.step}` || (want === 'showWarn' && state.warn);
-    el.hidden = !on;
+    el.hidden = want.startsWith('isStep') ? want !== `isStep${state.step}` : !on[want];
   });
 
   // Step dots: the design colours the current one and leaves the rest grey.
@@ -38,8 +69,29 @@ function paint() {
     btn.style.borderColor = on ? tint.bd : '#E8E8EC';
   }
 
-  const at = '@' + (state.handle || 'yourbrand');
-  qa('[data-bind="handleAt"]').forEach((el) => { el.textContent = at; });
+  const acct = state.account;
+  const bind = {
+    handleAt: '@' + (acct?.handle || state.handle || 'yourbrand'),
+    platform: state.platform,
+    // A captured view has no looked-up account, so it shows the handle that was
+    // typed and dashes for everything it did not read. The alternative — the
+    // design's figures — is a number presented as this brand's when it is not.
+    displayName: acct?.displayName || (state.mode === 'found' ? '—' : state.handle || 'yourbrand'),
+    initial: initial(acct?.displayName || state.handle),
+    handleLine: `@${acct?.handle || state.handle || 'yourbrand'} · ${state.platform}`,
+    followers: acct ? fmt(acct.followers ?? null) : '—',
+    // The lookup returns follower count only; post count and location are not
+    // part of it, and guessing them would be inventing them.
+    posts: '—',
+    location: '—',
+    lookupError: state.error || 'Something went wrong.',
+  };
+  qa('[data-bind]').forEach((el) => {
+    const v = bind[el.dataset.bind];
+    if (v !== undefined) el.textContent = v;
+  });
+  const tick = q('[data-bind="verifiedTick"]');
+  if (tick) tick.hidden = !acct?.verified;
 }
 
 const actions = {
@@ -55,6 +107,7 @@ const actions = {
     // resolves instantly hides the one state most likely to feel broken.
     go(2);
     clearTimeout(lookupTimer);
+    const seq = ++lookupSeq;
 
     // Live when a key is present: a real lookup replaces the design's timed
     // pause, and the step advances when the worker actually answers.
@@ -68,13 +121,26 @@ const actions = {
         }),
       })
         .then((d) => {
+          if (seq !== lookupSeq) return;     // a newer lookup already answered
+          state.account = d.found ? d.account : null;
           state.warn = Boolean(d.account?.warning);
-          state.found = d.found;
+          state.mode = d.found ? 'found' : 'notfound';
           go(3);
         })
-        .catch(() => go(3));
+        .catch((err) => {
+          if (seq !== lookupSeq) return;
+          state.account = null;
+          state.warn = false;
+          state.mode = 'failed';
+          state.error = err.message;
+          NOVA.notice(`Lookup failed — ${err.message}`);
+          go(3);
+        });
       return;
     }
+    state.account = null;
+    state.warn = false;
+    state.mode = 'sample';
     lookupTimer = setTimeout(() => go(3), 1600);
   },
 };
