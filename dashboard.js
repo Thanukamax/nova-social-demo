@@ -50,7 +50,10 @@ function renderTiles(accounts) {
  * ranking, and a bar anchored to the cell shows the gaps between rows that a
  * column of digits hides.
  */
+let LAST_POSTS = [];
+
 function renderPosts(posts) {
+  LAST_POSTS = posts;
   const ranked = [...posts].sort((a, b) => (b.views ?? b.likes ?? 0) - (a.views ?? a.likes ?? 0)).slice(0, 8);
   const peak = Math.max(...ranked.map((p) => p.views ?? p.likes ?? 0), 1);
 
@@ -61,14 +64,155 @@ function renderPosts(posts) {
     const link = p.permalink
       ? `<a href="${p.permalink}" target="_blank" rel="noopener noreferrer">${caption}</a>`
       : caption;
-    return `<tr>
+    return `<tr data-post="${encodeURIComponent(JSON.stringify(p))}">
       <td class="plat">${p.platform}</td>
-      <td class="cap" title="${caption.replace(/"/g, '&quot;')}">${link}</td>
+      <td class="cap" title="${caption.replace(/"/g, '&quot;')}">${caption}</td>
       <td><div class="bar" title="${fmt(v)} views"><i style="width:${pct}%"></i><em>${fmt(v)}</em></div></td>
       <td class="num">${fmt(p.likes)}</td>
       <td class="num">${fmt(p.comments)}</td>
     </tr>`;
   }).join('');
+
+  // The row opens the detail rather than the platform: the numbers, what people
+  // said and what to do about it belong together, and the outbound link is the
+  // last step rather than the first.
+  document.querySelectorAll('#rows tr').forEach((tr) => {
+    tr.addEventListener('click', () => {
+      try { openPost(JSON.parse(decodeURIComponent(tr.dataset.post))); } catch { /* malformed row */ }
+    });
+  });
+}
+
+/* ---------------------------------------------------------------- *
+ * Post detail
+ * ---------------------------------------------------------------- */
+
+/**
+ * A raw count means little on its own. "4,120 likes" is only useful next to
+ * what this account usually gets, so every figure is shown against the brand's
+ * own average rather than in isolation.
+ */
+function against(value, average) {
+  if (!value || !average) return null;
+  const ratio = value / average;
+  if (ratio >= 1.15) return `${ratio.toFixed(1)}× your average`;
+  if (ratio <= 0.85) return `${ratio.toFixed(1)}× your average`;
+  return 'about your average';
+}
+
+function averages(posts, platform) {
+  const peers = posts.filter((p) => p.platform === platform);
+  const mean = (k) => {
+    const vals = peers.map((p) => p[k]).filter((v) => typeof v === 'number');
+    return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
+  };
+  return { likes: mean('likes'), comments: mean('comments'), views: mean('views') };
+}
+
+function openPost(p) {
+  const avg = averages(LAST_POSTS, p.platform);
+  const followers = (window.NOVA_SAMPLE.accounts.find((a) => a.platform === p.platform) || {}).followers || 0;
+  const engagement = followers ? (((p.likes || 0) + (p.comments || 0)) / followers) * 100 : null;
+  const when = p.publishedAt ? new Date(p.publishedAt).toLocaleString('en-GB',
+    { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+
+  const cell = (k, n, vs) => `<div><span class="k">${k}</span><span class="n">${n}</span>${vs ? `<span class="vs">${vs}</span>` : ''}</div>`;
+
+  $('postBody').innerHTML = `
+    <div class="pd">
+      <span class="kind">${p.mediaType || 'post'} · ${p.platform}</span>
+      <h2>${(p.caption || 'Untitled post').slice(0, 110)}</h2>
+      <p class="when">${when}</p>
+
+      <div class="mgrid">
+        ${cell('Views', fmt(p.views), against(p.views, avg.views))}
+        ${cell('Likes', fmt(p.likes), against(p.likes, avg.likes))}
+        ${cell('Comments', fmt(p.comments), against(p.comments, avg.comments))}
+        ${cell('Engagement', engagement ? engagement.toFixed(2) + '%' : '—', followers ? `of ${fmt(followers)} followers` : '')}
+        <div class="locked"><span class="k">Reach, saves</span><span class="n">Not public</span>
+          <span class="vs">connect to record these</span></div>
+      </div>
+
+      <h3>What people said</h3>
+      <p class="said" id="saidLede">Reading the comments…</p>
+      <div id="themes"></div>
+
+      <h3 style="margin-top:26px">NuNu · what to do next</h3>
+      <div id="sugs"><p class="quiet">Working out what these comments mean…</p></div>
+
+      <div class="acts">
+        ${p.permalink ? `<a class="go" href="${p.permalink}" target="_blank" rel="noopener noreferrer">View the post ↗</a>` : ''}
+        <button class="ghost" id="askAbout">Ask NuNu about this post</button>
+      </div>
+    </div>`;
+
+  $('post').showModal();
+  $('askAbout').onclick = () => {
+    $('post').close();
+    ask(`About the post "${(p.caption || '').slice(0, 60)}" — what should I take from it?`);
+    document.querySelector('.chat')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
+
+  loadInsight(p);
+}
+
+async function loadInsight(p) {
+  if (!live) {
+    $('saidLede').textContent =
+      'Comment analysis runs on the live API. Add a key on the start page and reopen this post.';
+    $('sugs').innerHTML = '';
+    return;
+  }
+  if (!p.permalink) {
+    $('saidLede').textContent = 'This post has no public link, so its comments cannot be read.';
+    $('sugs').innerHTML = '';
+    return;
+  }
+
+  try {
+    const res = await fetch(`${cfg.url}/api/v1/brands/${brandId}/posts/insight`, {
+      method: 'POST',
+      headers: { 'x-nova-key': cfg.key, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        permalink: p.permalink, caption: p.caption,
+        metrics: { views: p.views, likes: p.likes, comments: p.comments },
+        totalComments: p.comments ?? null,
+      }),
+    });
+    if (res.status === 429) {
+      $('saidLede').textContent = 'Rate limited — try this post again in a minute.';
+      $('sugs').innerHTML = ''; return;
+    }
+    const d = await res.json();
+
+    if (!d.commentsRead) {
+      // Saying so beats an empty panel that looks like a loading failure.
+      $('saidLede').textContent = 'No comments were readable on this post.';
+      $('themes').innerHTML = ''; $('sugs').innerHTML = '';
+      return;
+    }
+
+    $('saidLede').textContent =
+      `${fmt(p.comments ?? d.commentsRead)} comments, grouped by what they were about.` +
+      (d.sentiment ? ` Overall ${d.sentiment}.` : '');
+
+    $('themes').innerHTML = d.themes.map((t) => `
+      <div class="theme">
+        <span class="c">${t.count || '—'}</span>
+        <div><b>${t.label}</b>${t.quote ? `<q>“${t.quote}”</q>` : ''}</div>
+      </div>`).join('') || '<p class="quiet">No clear grouping in these comments.</p>';
+
+    $('sugs').innerHTML = d.suggestions.length
+      ? d.suggestions.map((s, i) => `
+        <div class="sug">
+          <span class="i">${i + 1}</span>
+          <div><b>${s.title}</b><span class="h">${s.horizon}</span><p>${s.detail}</p></div>
+        </div>`).join('')
+      : '<p class="quiet">Nothing here warrants a change yet.</p>';
+  } catch (err) {
+    $('saidLede').textContent = `Could not read the comments — ${err.message}`;
+    $('sugs').innerHTML = '';
+  }
 }
 
 function bubble(role, text) {
@@ -163,6 +307,8 @@ async function load() {
   }
   bubble('it', `Hello — I'm NuNu. I can answer questions about ${sample.brand}'s own accounts.`);
 }
+
+$('postClose').addEventListener('click', () => $('post').close());
 
 document.querySelectorAll('.suggest button').forEach((b) =>
   b.addEventListener('click', () => ask(b.dataset.q)));
