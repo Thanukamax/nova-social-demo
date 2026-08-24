@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Review queue — Nova</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0F0F14; --muted:#5C5C68; --faint:#9A9AA4;
+  --accent:#4F46E5; --accent-soft:#F1F0FE; --accent-wash:rgba(79,70,229,.10);
+  --line:#E8E8EC; --bg:#FFFFFF; --sunk:#FAFAFB;
+  --ok:#0F7B4F; --ok-soft:#E9F4EE; --warn:#8A6100; --warn-soft:#FDF6E7;
+  --no:#B4232C; --no-soft:#FBEAEB;
+  --sans:'Plus Jakarta Sans',system-ui,-apple-system,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+  --dur-in:500ms; --dur-out:340ms; --ease:cubic-bezier(0.16,1,0.3,1);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;
+     line-height:1.6;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1080px;margin:0 auto;padding:0 32px 90px}
+
+header{display:flex;align-items:center;justify-content:space-between;padding:26px 0;
+       border-bottom:1px solid var(--line);margin-bottom:34px}
+.word{font-size:19px;font-weight:600;letter-spacing:.22em;color:var(--ink);text-decoration:none}
+.count{font-family:var(--mono);font-size:12.5px;color:var(--muted)}
+
+h1{font-size:32px;font-weight:200;letter-spacing:-.035em;margin:0 0 8px}
+.sub{color:var(--muted);font-size:15.5px;margin:0 0 26px;max-width:62ch}
+
+.progress{display:flex;gap:4px;margin-bottom:30px}
+.progress i{height:3px;flex:1;background:var(--line);border-radius:2px;
+            transition:background var(--dur-in) var(--ease)}
+.progress i.done{background:var(--accent)}
+.progress i.now{background:var(--ink)}
+
+/* Compare-and-decide: what Nova has on the left, what it found on the right.
+   Putting them side by side is the whole job — the reviewer is answering one
+   question, "are these the same company", and anything else is noise. */
+.compare{display:grid;grid-template-columns:1fr auto 1fr;gap:0;align-items:stretch;
+         border:1px solid var(--line);border-radius:22px;overflow:hidden;margin-bottom:20px}
+@media(max-width:780px){.compare{grid-template-columns:1fr}}
+.side{padding:26px}
+.side.found{background:var(--sunk)}
+.vs{display:grid;place-items:center;padding:0 6px;background:var(--line);width:1px}
+@media(max-width:780px){.vs{display:none}}
+.side h2{font-family:var(--mono);font-size:10.5px;font-weight:600;letter-spacing:.09em;
+         text-transform:uppercase;color:var(--faint);margin:0 0 16px}
+.brandname{font-size:24px;font-weight:300;letter-spacing:-.025em;margin:0 0 4px}
+.from{font-size:13px;color:var(--faint)}
+
+.acct{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+.av{width:46px;height:46px;border-radius:50%;background:var(--accent-soft);color:var(--accent);
+    display:grid;place-items:center;font-size:16px;font-weight:600;flex:none}
+.acct b{display:block;font-size:17px;font-weight:500;letter-spacing:-.01em}
+.acct span{font-family:var(--mono);font-size:12.5px;color:var(--muted)}
+.tick{display:inline-block;font-family:var(--mono);font-size:9.5px;letter-spacing:.05em;
+      color:var(--ok);border:1px solid var(--ok);border-radius:999px;padding:1px 7px;margin-left:7px}
+
+.figs{display:flex;gap:22px;margin-bottom:18px}
+.fig .n{font-family:var(--mono);font-size:19px;font-weight:500;font-variant-numeric:tabular-nums;display:block}
+.fig .k{font-size:11.5px;color:var(--faint)}
+
+/* Signals are the reason this row is here. Ordered warnings-first, because the
+   doubt is what the reviewer is being asked to resolve. */
+.sig{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px}
+.sig li{display:flex;gap:9px;align-items:flex-start;font-size:14px;color:var(--muted)}
+.sig .m{width:5px;height:5px;border-radius:50%;margin-top:8px;flex:none;background:var(--faint)}
+.sig li.good .m{background:var(--ok)} .sig li.good{color:var(--ink)}
+.sig li.warn .m{background:var(--warn)} .sig li.warn{color:var(--warn)}
+
+.acts{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+button{font-family:inherit;font-size:14.5px;font-weight:500;border-radius:14px;cursor:pointer;
+       padding:13px 22px;transition:opacity var(--dur-out) var(--ease),
+       border-color var(--dur-out) var(--ease),color var(--dur-out) var(--ease)}
+button:active{transform:scale(.97)}
+.yes{background:var(--accent);border:1px solid var(--accent);color:#fff}
+.yes:hover{opacity:.88;transition-duration:var(--dur-in)}
+.no{background:none;border:1px solid var(--line);color:var(--ink)}
+.no:hover{border-color:var(--no);color:var(--no);transition-duration:var(--dur-in)}
+.skip{background:none;border:0;color:var(--muted);padding:13px 8px}
+.skip:hover{color:var(--accent);transition-duration:var(--dur-in)}
+kbd{font-family:var(--mono);font-size:10.5px;border:1px solid var(--line);border-radius:5px;
+    padding:1px 5px;color:var(--faint);margin-left:6px}
+a.open{font-size:13.5px;color:var(--accent);text-decoration:none;margin-left:auto}
+a.open:hover{text-decoration:underline}
+
+.card{animation:arrive var(--dur-in) var(--ease) both}
+@keyframes arrive{from{opacity:0;transform:translateY(10px);filter:blur(3px)}
+                  to{opacity:1;transform:none;filter:none}}
+
+.done{border:1px dashed var(--line);border-radius:22px;padding:44px 30px;text-align:center}
+.done h2{font-size:24px;font-weight:300;letter-spacing:-.025em;margin:0 0 10px}
+.done p{color:var(--muted);margin:0 auto 22px;max-width:48ch}
+
+.tally{display:flex;gap:2px;background:var(--line);border-radius:14px;overflow:hidden;margin-top:26px}
+.tally div{flex:1;background:var(--bg);padding:14px 16px}
+.tally .n{font-family:var(--mono);font-size:20px;font-weight:500;display:block;font-variant-numeric:tabular-nums}
+.tally .k{font-size:11.5px;color:var(--faint)}
+.tally .accepted .n{color:var(--ok)} .tally .rejected .n{color:var(--no)}
+
+pre{font-family:var(--mono);font-size:12px;background:var(--sunk);border:1px solid var(--line);
+    border-radius:14px;padding:16px;overflow:auto;max-height:280px;text-align:left;margin:22px 0 0}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <a class="word" href="./">NOVA</a>
+  <span class="count" id="count">—</span>
+</header>
+
+<h1>Review queue</h1>
+<p class="sub">Accounts the matcher could not decide on by itself. Almost all of them are a global brand that shares a name with a Sri Lankan one — the kind of call a person makes in two seconds and a classifier cannot make at all.</p>
+
+<div class="progress" id="progress"></div>
+<div id="stage"></div>
+</div>
+<script src="./review-data.js?v=1787576959"></script>
+<script src="./review.js?v=1787576959"></script>
+</body>
+</html>
