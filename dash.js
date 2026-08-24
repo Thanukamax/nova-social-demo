@@ -98,6 +98,56 @@ async function loadInsight(post) {
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') dialog?.close(); });
 dialog?.addEventListener('click', (e) => { if (e.target === dialog) dialog.close(); });
 
+/* ---- NuNu maximise ------------------------------------------------ */
+
+/**
+ * The design draws a maximise control but ships both of its icon states
+ * hidden, so the button rendered as an empty box and did nothing.
+ *
+ * Expanding lifts the panel out to a fixed overlay rather than resizing it in
+ * place: the conversation is the thing you want room for, and growing a column
+ * inside a grid just makes the dashboard reflow around it.
+ */
+const nunuToggle = q('#nunuToggle');
+const nunuPanel = nunuToggle?.closest('div[style*="border"]')?.parentElement
+  || nunuToggle?.closest('div[style*="display:flex"]')?.parentElement;
+
+let nunuFull = false;
+let backdrop = null;
+
+function setNunuFull(on) {
+  if (!nunuPanel) return;
+  nunuFull = on;
+
+  q('#iconExpand')?.toggleAttribute('hidden', on);
+  q('#iconCollapse')?.toggleAttribute('hidden', !on);
+
+  if (on) {
+    nunuPanel.dataset.prevStyle = nunuPanel.getAttribute('style') || '';
+    nunuPanel.setAttribute('style',
+      `${nunuPanel.dataset.prevStyle};position:fixed;inset:3vh 4vw;z-index:60;` +
+      'background:#FFFFFF;border:1px solid #E8E8EC;border-radius:16px;' +
+      'box-shadow:0 30px 90px rgba(15,15,20,.22);display:flex;flex-direction:column;' +
+      'transition:none');
+
+    backdrop = document.createElement('div');
+    backdrop.setAttribute('style',
+      'position:fixed;inset:0;background:rgba(15,15,20,.34);z-index:55');
+    backdrop.addEventListener('click', () => setNunuFull(false));
+    document.body.appendChild(backdrop);
+  } else {
+    nunuPanel.setAttribute('style', nunuPanel.dataset.prevStyle || '');
+    backdrop?.remove();
+    backdrop = null;
+  }
+
+  // The transcript grows when the panel does; keep the latest message in view.
+  if (log) log.scrollTop = log.scrollHeight;
+}
+
+nunuToggle?.addEventListener('click', (e) => { e.preventDefault(); setNunuFull(!nunuFull); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && nunuFull) setNunuFull(false); });
+
 /* ---- NuNu, live -------------------------------------------------- */
 
 const input = q('#nunuInput');
