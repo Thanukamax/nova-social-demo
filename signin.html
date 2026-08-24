@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sign in — Nova Social</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200..800&family=Space+Grotesk:wght@400..600&display=swap" rel="stylesheet">
+<style>
+/* Carried from the design file unchanged — the prototype's values are the spec. */
+body{margin:0;background:#EDEDF0;font-family:'Plus Jakarta Sans',system-ui,sans-serif}
+a{color:#4F46E5;text-decoration:none}
+a:hover{text-decoration:underline}
+@keyframes novaBreathe{0%,100%{opacity:.25;transform:scale(.85)}50%{opacity:1;transform:scale(1)}}
+.stage{min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:40px 24px 80px}
+.card{background:#FFFFFF;border:1px solid #E8E8EC;border-radius:8px;overflow:hidden;width:440px;max-width:100%}
+[hidden]{display:none!important}
+/* style-hover / style-active from the prototype, hoisted to real rules */
+.dcx1:hover{background:#4338CA}
+.dcx1:active{transform:scale(.97)}
+.dcx2:hover{border-color:#0F0F14;text-decoration:none}
+@media (prefers-reduced-motion:reduce){*{transition-duration:.01ms!important;animation-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<div class="stage"><div class="card">
+
+  <div style="padding:52px 48px 44px">
+    <div style="display:flex;align-items:center;gap:10px">
+      <span style="width:30px;height:30px;border-radius:9px;background:#4F46E5;display:grid;place-items:center;flex:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M21.6 3 4.4 10.8l6.3 2.1 2.1 6.3L21.6 3Z" fill="#FFFFFF"></path><path d="M21.6 3 10.7 12.9" stroke="#4F46E5" stroke-width="1.25" stroke-linecap="round"></path><path d="M2.4 15.6h4M4.6 18.9h2.6" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" opacity=".72"></path></svg></span>
+      <span style="font-size:19px;font-weight:700;letter-spacing:-.02em;color:#0F0F14">nova</span>
+      <span style="font-family:'Space Grotesk',system-ui,sans-serif;font-size:18px;font-weight:500;letter-spacing:-.02em;color:#4F46E5">Social</span>
+    </div>
+    <h1 style="margin:34px 0 0;font-size:32px;font-weight:200;line-height:1.1;letter-spacing:-.035em;color:#0F0F14">Sign in</h1>
+    <p style="margin:12px 0 0;font-size:14.5px;line-height:1.6;color:#5C5C68">For brands with a Nova Social account. Same login as the marketplace.</p>
+    <div style="display:flex;flex-direction:column;gap:16px;margin:30px 0 0">
+      <label style="display:flex;flex-direction:column;gap:7px">
+        <span style="font-size:12.5px;font-weight:500;color:#5C5C68">Username</span>
+        <input type="text" placeholder="kandos" style="font-family:inherit;font-size:14.5px;color:#0F0F14;background:#FFFFFF;border:1px solid #E8E8EC;border-radius:14px;padding:13px 15px;outline:none;transition:border-color 340ms cubic-bezier(0.16,1,0.3,1)" style-focus="border-color:#4F46E5">
+      </label>
+      <label style="display:flex;flex-direction:column;gap:7px">
+        <span style="display:flex;align-items:baseline;justify-content:space-between;font-size:12.5px;font-weight:500;color:#5C5C68">Password<a href="#1f" style="font-size:12.5px;font-weight:500;color:#4F46E5;text-decoration:none">Forgot it?</a></span>
+        <input type="password" placeholder="••••••••" style="font-family:inherit;font-size:14.5px;color:#0F0F14;background:#FFFFFF;border:1px solid #E8E8EC;border-radius:14px;padding:13px 15px;outline:none;transition:border-color 340ms cubic-bezier(0.16,1,0.3,1)" style-focus="border-color:#4F46E5">
+      </label>
+    </div>
+    <button class="dcx1" style="font-family:inherit;width:100%;margin:24px 0 0;font-size:14.5px;font-weight:600;color:#FFFFFF;background:#4F46E5;border:none;border-radius:14px;padding:14px 0;cursor:pointer;transition:background 340ms cubic-bezier(0.16,1,0.3,1)">Sign in</button>
+    <div style="display:flex;align-items:center;gap:12px;margin:26px 0 0"><span style="flex:1;height:1px;background:#E8E8EC"></span><span style="font-size:12px;color:#9A9AA4">no account</span><span style="flex:1;height:1px;background:#E8E8EC"></span></div>
+    <a class="dcx2" href="#1g" style="display:flex;align-items:center;justify-content:center;gap:8px;margin:20px 0 0;font-size:14px;font-weight:600;color:#0F0F14;border:1px solid #E8E8EC;border-radius:14px;padding:13px 0;text-decoration:none;transition:border-color 340ms cubic-bezier(0.16,1,0.3,1)">Request access →</a>
+  </div>
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;padding:15px 24px;border-top:1px solid #E8E8EC">
+    <span style="font-size:12px;color:#9A9AA4">© 2026 Nova Studio · Colombo</span>
+    <a href="#1f" style="font-size:12px;color:#5C5C68;text-decoration:none">Privacy</a>
+</div></div>
+<script src="./nav.js"></script>
+</body>
+</html>

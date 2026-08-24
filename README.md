@@ -1,53 +1,42 @@
 # nova-social-demo
 
-Brand social onboarding UI for NovaDrop. Static, no build step.
+The Nova Social screens from the Claude Design handoff, built as real pages.
 
 **Live:** https://thanukamax.github.io/nova-social-demo/
 
-## What it shows
+| Page | Artboard |
+|---|---|
+| `index.html` | 1a connect flow, with 1b's namesake warning as a step-3 variant |
+| `dashboard.html` | 1c dashboard, with 1e post detail as a dialog |
+| `signin.html` | 1f |
+| `request.html` | 1g |
+| `lockup.html` | 1d |
+| `review.html` | Review queue — not in the canvas; built from section 5 of the brief |
 
-The flow a brand goes through: pick a platform, enter a handle, and confirm the
-account we found is theirs. It ends on the public tier, with the metrics that
-need OAuth shown as locked rather than hidden.
+## How these were produced
 
-Try `daraz.lk` or `kapruka`. Try `pizzahut` to see the warning that catches a
-brand entering the worldwide account instead of their local one.
+The handoff README asks for the designs to be recreated pixel-perfectly, so the
+prototype's inline styles are the specification and are carried across
+byte-for-byte. Only the canvas-only constructs were translated:
 
-## Sample data by default, and why
+- `sc-for` expanded at build time against the design's own `POSTS` and `dots`
+- `sc-if` kept in the DOM as `data-when`, toggled by the step state
+- `{{ bindings }}` resolved from the design's own state model
+- `style-hover` / `style-active` hoisted into real CSS rules
+- `onClick="{{ fn }}"` wired to real handlers
 
-GitHub Pages is public and static, so the worker's internal key cannot live in
-this repository. The page therefore runs on sample data — real figures captured
-from the live vendor on 2026-08-24, not invented ones.
+None of `support.js` ships. The state machine in `connect.js` is a port of the
+prototype's own `Component` — same four steps, same 1600ms lookup pause, same
+per-network tinting — rather than a reinterpretation.
 
-To drive the real API, click **sample data** in the header and paste the key.
-It is held in `sessionStorage` for that tab only and is sent to the worker and
-nowhere else.
+The converter lives in `/tmp/conv/convert.py` during a rebuild; the pages here
+are its output plus the hand-written handlers.
 
-## Dashboard
+## Two notes the designer left in the canvas
 
-`dashboard.html` is where the flow lands. Tiles carry the summary, a ranked
-table shows top posts with in-row magnitude bars, and NuNu sits at the bottom.
+Both are flagged in the design file as deviations from `DESIGN_BRIEF_SOCIAL.md`,
+and both are honoured here:
 
-Two deliberate choices worth knowing:
-
-- **The follower trend is an empty state, not a sparkline.** There are two
-  snapshots so far, taken minutes apart. Drawing a line through them would
-  invent a shape the data does not have. It fills in as history accumulates,
-  which is also the honest product story.
-- **Platform identity is the label, not a colour.** Nova has one accent, and
-  inventing a second hue to separate Instagram from TikTok would break the
-  identity for no gain — the tiles are already named.
-
-NuNu needs the live API. Without a key it says so rather than returning a
-scripted answer, because a canned reply would misrepresent what it does.
-
-## Design notes
-
-Nova's own tokens: white ground, `#0F0F14` ink, one `#4F46E5` accent, Plus
-Jakarta Sans, mono for figures.
-
-Motion follows the measured Nova system — entry `500ms`, release `340ms`, a 1.5
-ratio, on `cubic-bezier(0.16,1,0.3,1)`. Screens arrive deliberately and leave
-without ceremony. The lookup step has a real waiting state because the live call
-takes seconds and a snap would read as a hang. Everything is disabled under
-`prefers-reduced-motion`.
+- Figures and micro-labels use the Apple system face with tabular numerals
+  rather than JetBrains Mono.
+- Micro-labels sit at 12px rather than 10.5px, respecting the no-sub-12px rule.

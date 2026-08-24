@@ -3,237 +3,343 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Your accounts — Nova</title>
+<title>Your account — Nova Social</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200..800&family=Space+Grotesk:wght@400..600&display=swap" rel="stylesheet">
 <style>
-:root{
-  --ink:#0F0F14; --muted:#5C5C68; --faint:#9A9AA4;
-  --accent:#4F46E5; --accent-soft:#F1F0FE; --accent-wash:rgba(79,70,229,.10);
-  --line:#E8E8EC; --bg:#FFFFFF; --sunk:#FAFAFB;
-  --ok:#0F7B4F; --ok-soft:#E9F4EE; --warn:#8A6100; --warn-soft:#FDF6E7;
-  --sans:'Plus Jakarta Sans',system-ui,-apple-system,sans-serif;
-  --mono:'JetBrains Mono',ui-monospace,monospace;
-  --dur-in:500ms; --dur-out:340ms; --ease:cubic-bezier(0.16,1,0.3,1);
-}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);
-     font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
-.wrap{max-width:1120px;margin:0 auto;padding:0 32px}
-
-header{display:flex;align-items:center;justify-content:space-between;padding:26px 0;
-       border-bottom:1px solid var(--line)}
-.word{font-size:19px;font-weight:600;letter-spacing:.22em;color:var(--ink);text-decoration:none}
-.who{display:flex;align-items:center;gap:12px}
-.av{width:34px;height:34px;border-radius:50%;background:var(--accent-soft);color:var(--accent);
-    display:grid;place-items:center;font-size:13px;font-weight:600}
-.who b{font-size:14.5px;font-weight:500}
-.who span{font-family:var(--mono);font-size:12px;color:var(--muted);display:block;line-height:1.3}
-
-
-.tabs{display:flex;gap:6px;margin:30px 0 0}
-.tab{font-family:inherit;font-size:14px;font-weight:500;color:var(--muted);background:none;
-  border:1px solid transparent;border-radius:999px;padding:7px 16px;cursor:pointer;
-  transition:color var(--dur-out) var(--ease),border-color var(--dur-out) var(--ease)}
-.tab:hover{color:var(--ink);transition-duration:var(--dur-in)}
-.tab[aria-selected="true"]{color:var(--ink);border-color:var(--line);background:var(--sunk)}
-.topline{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-top:26px}
-.tierbar{display:flex;gap:8px;align-items:center;padding-bottom:4px}
-.tierchip{border:1px solid rgba(79,70,229,.35);border-radius:5px;padding:5px 11px;
-  font-size:12.5px;font-weight:600;color:var(--accent)}
-.connect{font-family:inherit;font-size:13.5px;font-weight:600;color:var(--ink);background:var(--bg);
-  border:1px solid var(--line);border-radius:999px;padding:7px 16px;cursor:pointer;
-  transition:border-color var(--dur-out) var(--ease)}
-.connect:hover{border-color:var(--ink);transition-duration:var(--dur-in)}
-.connect:active{transform:scale(.97)}
-.trend{margin:20px 0 0;border:1px dashed var(--line);border-radius:18px;padding:30px 32px}
-.trend .lbl{font:500 12px var(--sans);color:var(--faint)}
-.trend .line{margin:12px 0 0;font-size:19px;font-weight:300;letter-spacing:-.02em}
-.trend .why{margin:8px 0 0;font-size:13.5px;line-height:1.6;color:var(--muted);max-width:56ch}
-.secthead{display:flex;align-items:baseline;justify-content:space-between;gap:14px;margin-bottom:14px}
-h2.big{font-family:var(--sans);font-size:22px;font-weight:300;letter-spacing:-.02em;
-  text-transform:none;color:var(--ink);margin:0}
-.quiet{font-size:13px;color:var(--faint)}
-.ptitle{font-size:14.5px;color:var(--ink);text-decoration:none;display:block}
-.pmeta{font-size:12.5px;color:var(--faint);margin-top:2px}
-.lockrows{flex:1;min-width:230px;display:flex;flex-direction:column;gap:2px}
-.lockrows div{display:flex;justify-content:space-between;padding:9px 0;border-top:1px solid var(--line)}
-.lockrows span:first-child{font-size:14px}
-.lockrows span:last-child{font-family:var(--mono);font-size:12px;color:var(--faint)}
-h1{font-size:34px;font-weight:200;letter-spacing:-.035em;margin:38px 0 6px}
-.sub{color:var(--muted);font-size:15.5px;margin:0 0 30px}
-
-/* Summary before detail: the numbers a brand opens this page for. */
-.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:16px}
-.tile{border:1px solid var(--line);border-radius:18px;padding:20px 22px}
-.tile .lbl{font-family:var(--mono);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;
-           color:var(--faint);display:block;margin-bottom:10px}
-.tile .val{font-family:var(--mono);font-size:30px;font-weight:500;letter-spacing:-.03em;
-           font-variant-numeric:tabular-nums;display:block;line-height:1.05}
-.tile .cap{font-size:12.5px;color:var(--muted);margin-top:7px}
-.chip{display:inline-block;font-family:var(--mono);font-size:10px;letter-spacing:.06em;
-      border-radius:999px;padding:2px 9px;border:1px solid currentColor}
-.chip.ok{color:var(--ok);background:var(--ok-soft)}
-.chip.pending{color:var(--warn);background:var(--warn-soft)}
-
-section{margin:38px 0}
-h2{font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.1em;
-   text-transform:uppercase;color:var(--faint);margin:0 0 14px}
-
-/* Trend is deliberately an empty state: two snapshots minutes apart is not a
-   line, and drawing one would invent a shape the data does not have. */
-.empty{border:1px dashed var(--line);border-radius:18px;padding:30px;text-align:center}
-.empty p{margin:0;color:var(--muted);font-size:14.5px;max-width:52ch;margin-inline:auto}
-.empty .big{font-family:var(--mono);font-size:13px;color:var(--faint);margin-bottom:8px}
-
-.tw{overflow-x:auto;border:1px solid var(--line);border-radius:18px}
-table{border-collapse:collapse;width:100%;font-size:14px}
-th{font-family:var(--mono);font-size:10.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;
-   color:var(--faint);text-align:left;padding:12px 16px;background:var(--sunk);white-space:nowrap}
-td{padding:13px 16px;border-top:1px solid var(--line);vertical-align:middle}
-tbody tr{transition:background var(--dur-out) var(--ease)}
-tbody tr:hover{background:var(--sunk);transition-duration:var(--dur-in)}
-.num{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
-.cap{max-width:340px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)}
-.plat{font-family:var(--mono);font-size:11.5px;color:var(--muted)}
-
-/* Magnitude in-row: one hue, anchored to the cell's left edge, rounded data-end. */
-.bar{position:relative;height:22px;min-width:64px}
-.bar i{position:absolute;left:0;top:4px;height:14px;background:var(--accent-wash);
-       border-radius:3px 4px 4px 3px;display:block}
-.bar em{position:absolute;inset:0;display:flex;align-items:center;justify-content:flex-end;
-        font-family:var(--mono);font-size:12.5px;font-style:normal;font-variant-numeric:tabular-nums;
-        padding-right:6px}
-
-.locked{display:flex;gap:22px;flex-wrap:wrap;border:1px dashed var(--line);border-radius:18px;padding:20px 22px}
-.locked div{flex:1;min-width:230px}
-.locked h3{font-size:15px;font-weight:500;margin:0 0 6px}
-.locked p{margin:0;font-size:13.5px;color:var(--muted)}
-.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
-.chips span{font-family:var(--mono);font-size:11px;color:var(--faint);border:1px solid var(--line);
-            border-radius:999px;padding:3px 10px}
-
-/* NuNu */
-.chat{border:1px solid var(--line);border-radius:20px;overflow:hidden}
-.chat .head{display:flex;align-items:center;gap:10px;padding:15px 20px;border-bottom:1px solid var(--line)}
-.dot{width:7px;height:7px;border-radius:50%;background:var(--ok)}
-.chat .head b{font-size:14.5px;font-weight:500}
-.chat .head span{font-size:12.5px;color:var(--faint)}
-.log{padding:20px;display:flex;flex-direction:column;gap:12px;max-height:360px;overflow-y:auto}
-.msg{max-width:82%;padding:11px 15px;border-radius:14px;font-size:14.5px;white-space:pre-wrap;
-     animation:rise var(--dur-in) var(--ease) both}
-@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-.msg.me{align-self:flex-end;background:var(--accent);color:#fff}
-.msg.it{align-self:flex-start;background:var(--sunk);border:1px solid var(--line)}
-.meta{font-family:var(--mono);font-size:10.5px;color:var(--faint);margin-top:7px}
-.ask{display:flex;gap:10px;padding:15px 20px;border-top:1px solid var(--line)}
-.ask input{flex:1;font-family:inherit;font-size:14.5px;border:1px solid var(--line);border-radius:12px;
-           padding:11px 14px;outline:none;transition:border-color var(--dur-out) var(--ease)}
-.ask input:focus{border-color:var(--accent);transition-duration:var(--dur-in)}
-button{font-family:inherit;font-size:14px;font-weight:500;border-radius:12px;cursor:pointer;
-       transition:opacity var(--dur-out) var(--ease),border-color var(--dur-out) var(--ease)}
-button.go{background:var(--accent);border:1px solid var(--accent);color:#fff;padding:11px 20px}
-button.go:hover{opacity:.88;transition-duration:var(--dur-in)}
-button:active{transform:scale(.97)}
-.suggest{display:flex;gap:8px;flex-wrap:wrap;padding:0 20px 16px}
-.suggest button{background:none;border:1px solid var(--line);color:var(--muted);font-size:12.5px;padding:6px 13px}
-.suggest button:hover{border-color:var(--accent);color:var(--accent);transition-duration:var(--dur-in)}
-
-footer{border-top:1px solid var(--line);margin-top:50px;padding:22px 0 60px;color:var(--faint);font-size:13px}
-a{color:var(--accent)}
-@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
-:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+/* Carried from the design file unchanged — the prototype's values are the spec. */
+body{margin:0;background:#EDEDF0;font-family:'Plus Jakarta Sans',system-ui,sans-serif}
+a{color:#4F46E5;text-decoration:none}
+a:hover{text-decoration:underline}
+@keyframes novaBreathe{0%,100%{opacity:.25;transform:scale(.85)}50%{opacity:1;transform:scale(1)}}
+.stage{min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:40px 24px 80px}
+.card{background:#FFFFFF;border:1px solid #E8E8EC;border-radius:8px;overflow:hidden;width:1180px;max-width:100%;position:relative}
+[hidden]{display:none!important}
+/* style-hover / style-active from the prototype, hoisted to real rules */
+.dcx1:hover{border-color:#0F0F14}
+.dcx1:active{transform:scale(.97)}
+.dcx2:hover{color:#4F46E5}
+.dcx3:hover{color:#4F46E5}
+.dcx4:hover{color:#4F46E5}
+.dcx5:hover{color:#4F46E5}
+.dcx6:hover{color:#4F46E5}
+.dcx7:hover{filter:saturate(1.15)}
+.dcx7:active{transform:scale(.97)}
+.dcx8:hover{background:#26262F}
+.dcx8:active{transform:scale(.97)}
+.dcx9:hover{filter:brightness(.93)}
+.dcx9:active{transform:scale(.97)}
+.dcx10:hover{border-color:#0F0F14}
+.dcx10:active{transform:scale(.97)}
+.dcx11:hover{background:#EEF0FE}
+.dcx11:active{transform:scale(.97)}
+.dcx12:hover{background:#EEF0FE}
+.dcx12:active{transform:scale(.97)}
+.dcx13:hover{background:#EEF0FE}
+.dcx13:active{transform:scale(.97)}
+.dcx14:hover{background:#4338CA}
+.dcx14:active{transform:scale(.97)}
+.dcx1:hover{filter:saturate(1.15);text-decoration:none}
+.dcx2:hover{border-color:#0F0F14}
+.dcx2:active{transform:scale(.97)}
+@media (prefers-reduced-motion:reduce){*{transition-duration:.01ms!important;animation-duration:.01ms!important}}
 </style>
 </head>
 <body>
-<div class="wrap">
-<header>
-  <a class="word" href="./">NOVA</a>
-  <div class="who">
-    <div class="av" id="av">DS</div>
-    <div><b id="brandName">—</b><span id="brandHandle">—</span></div>
-  </div>
-</header>
+<div class="stage"><div class="card">
 
-<div class="tabs" id="tabs"></div>
-
-<div class="topline">
-  <div>
-    <h1 id="h1">Your account</h1>
-    <p class="sub" id="freshness">—</p>
-  </div>
-  <div class="tierbar">
-    <span class="tierchip" id="tierchip">Public tier</span>
-    <button class="connect" id="connectMore">Connect for more</button>
-  </div>
-</div>
-
-<div class="tiles" id="tiles"></div>
-
-<div class="trend">
-  <span class="lbl">Follower trend</span>
-  <p class="line" id="snapshotLine">—</p>
-  <p class="why" id="trendWhy"></p>
-</div>
-
-<section>
-  <div class="secthead">
-    <h2 class="big">Top posts</h2>
-    <span class="quiet" id="postsScope">Last 30 days, public figures</span>
-  </div>
-  <div class="tw"><table>
-    <thead><tr>
-      <th>Post</th><th class="num">Likes vs best</th>
-      <th class="num">Comments</th><th class="num">Engagement</th>
-    </tr></thead>
-    <tbody id="rows"></tbody>
-  </table></div>
-</section>
-
-<section>
-  <div class="locked">
-    <div>
-      <h3>Only you can see these</h3>
-      <p id="lockedWhy">Reach, impressions and saves are never rendered publicly, so no one can read them from outside — including us. Connect the account and Nova records them alongside the rest.</p>
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:0 32px;height:56px;border-bottom:1px solid #E8E8EC">
+    <div style="display:flex;align-items:center;gap:10px">
+      <span style="width:24px;height:24px;border-radius:7px;background:#4F46E5;display:grid;place-items:center;flex:none"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M21.6 3 4.4 10.8l6.3 2.1 2.1 6.3L21.6 3Z" fill="#FFFFFF"></path><path d="M21.6 3 10.7 12.9" stroke="#4F46E5" stroke-width="1.25" stroke-linecap="round"></path><path d="M2.4 15.6h4M4.6 18.9h2.6" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" opacity=".72"></path></svg></span>
+      <span style="font-size:16px;font-weight:700;letter-spacing:-.02em;color:#0F0F14">nova</span>
+      <span style="font-family:'Space Grotesk',system-ui,sans-serif;font-size:16px;font-weight:500;letter-spacing:-.02em;color:#4F46E5">Social</span>
     </div>
-    <div class="lockrows">
-      <div><span>Reach</span><span>not public</span></div>
-      <div><span>Impressions</span><span>not public</span></div>
-      <div><span>Saves</span><span>not public</span></div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <span style="font-size:13.5px;color:#5C5C68">@kandos.lk</span>
+      <span style="display:inline-flex;align-items:center;gap:7px;border:1px solid #E8E8EC;border-radius:4px;padding:4px 9px;font-size:12.5px;font-weight:500;color:#0F0F14"><span style="width:7px;height:7px;border-radius:999px;background:#0F7B4F"></span>Tracking</span>
     </div>
   </div>
-</section>
-
-<section>
-  <h2>Ask NuNu</h2>
-  <div class="chat">
-    <div class="head"><span class="dot"></span><b>NuNu</b><span>· answers about your own accounts only</span></div>
-    <div class="log" id="log"></div>
-    <div class="suggest">
-      <button data-q="What were my top posts?">top posts</button>
-      <button data-q="How many followers do I have?">followers</button>
-      <button data-q="How do brands get paid on Nova?">payments</button>
-      <button data-q="Why cant I connect my Instagram account?">connecting</button>
+  <div style="padding:56px 48px 64px">
+    <div style="display:flex;align-items:flex-end;justify-content:space-between">
+      <div>
+        <h1 style="margin:0;font-size:40px;font-weight:200;line-height:1.05;letter-spacing:-.035em;color:#0F0F14">Kandos on Instagram</h1>
+        <p style="margin:12px 0 0;font-size:15px;color:#5C5C68">Public figures, read today at 09:14. Two snapshots on record.</p>
+      </div>
+      <div style="display:flex;gap:8px">
+        <span style="border:1px solid rgba(79,70,229,.35);border-radius:4px;padding:5px 11px;font-size:12.5px;font-weight:600;color:#4F46E5">Public tier</span>
+        <button class="dcx1" style="font-family:inherit;font-size:13.5px;font-weight:600;color:#0F0F14;background:#FFFFFF;border:1px solid #E8E8EC;border-radius:999px;padding:6px 16px;cursor:pointer;transition:border-color 340ms cubic-bezier(0.16,1,0.3,1)">Connect for more</button>
+      </div>
     </div>
-    <div class="ask">
-      <input id="q" placeholder="Ask about your performance…">
-      <button class="go" id="send">Ask</button>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:44px 0 0">
+      <div style="border:1px solid #E8E8EC;border-radius:18px;padding:22px 24px">
+        <div style="font:500 12px 'Plus Jakarta Sans',system-ui,sans-serif;color:#9A9AA4">Followers</div>
+        <div style="margin:14px 0 0;font:500 30px 'Plus Jakarta Sans',system-ui,sans-serif;font-variant-numeric:tabular-nums;letter-spacing:-.02em;color:#0F0F14">48,210</div>
+        <div style="margin:6px 0 0;font-size:13px;color:#5C5C68">+124 since yesterday</div>
+      </div>
+      <div style="border:1px solid #E8E8EC;border-radius:18px;padding:22px 24px">
+        <div style="font:500 12px 'Plus Jakarta Sans',system-ui,sans-serif;color:#9A9AA4">Posts, 30 days</div>
+        <div style="margin:14px 0 0;font:500 30px 'Plus Jakarta Sans',system-ui,sans-serif;font-variant-numeric:tabular-nums;letter-spacing:-.02em;color:#0F0F14">18</div>
+        <div style="margin:6px 0 0;font-size:13px;color:#5C5C68">4 reels, 14 stills</div>
+      </div>
+      <div style="border:1px solid #E8E8EC;border-radius:18px;padding:22px 24px">
+        <div style="font:500 12px 'Plus Jakarta Sans',system-ui,sans-serif;color:#9A9AA4">Avg likes</div>
+        <div style="margin:14px 0 0;font:500 30px 'Plus Jakarta Sans',system-ui,sans-serif;font-variant-numeric:tabular-nums;letter-spacing:-.02em;color:#0F0F14">1,942</div>
+        <div style="margin:6px 0 0;font-size:13px;color:#5C5C68">per post, last 18</div>
+      </div>
+      <div style="border:1px solid #E8E8EC;border-radius:18px;padding:22px 24px">
+        <div style="font:500 12px 'Plus Jakarta Sans',system-ui,sans-serif;color:#9A9AA4">Engagement</div>
+        <div style="margin:14px 0 0;font:500 30px 'Plus Jakarta Sans',system-ui,sans-serif;font-variant-numeric:tabular-nums;letter-spacing:-.02em;color:#0F0F14">4.1%</div>
+        <div style="margin:6px 0 0;font-size:13px;color:#5C5C68">likes + comments / followers</div>
+      </div>
     </div>
+    <div style="margin:20px 0 0;border:1px dashed #E8E8EC;border-radius:18px;padding:32px">
+      <div>
+        <div style="font:500 12px 'Plus Jakarta Sans',system-ui,sans-serif;color:#9A9AA4">Follower trend</div>
+        <p style="margin:12px 0 0;font-size:19px;font-weight:300;letter-spacing:-.02em;color:#0F0F14">2 snapshots so far — history builds from today.</p>
+        <p style="margin:8px 0 0;font-size:13.5px;line-height:1.6;color:#5C5C68;max-width:56ch">Instagram keeps no long history of its own, so a line drawn now would invent a shape. The chart appears once there is enough record to be true.</p>
+      </div>
+    </div>
+    <div style="margin:64px 0 0">
+      <div style="display:flex;align-items:baseline;justify-content:space-between">
+        <h2 style="margin:0;font-size:22px;font-weight:300;letter-spacing:-.03em;color:#0F0F14">Top posts</h2>
+        <span style="font-size:13px;color:#9A9AA4">Last 30 days, public figures</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 176px 116px 128px;align-items:center;margin:20px 0 0;padding:10px 16px;background:#FAFAFB;border-radius:12px;font:500 12px 'Plus Jakarta Sans',system-ui,sans-serif;color:#9A9AA4">
+        <span>Post</span><span style="text-align:right">Likes vs best</span><span style="text-align:right">Comments</span><span style="text-align:right">Engagement</span>
+      </div>
+      
+        <div style="display:grid;grid-template-columns:1fr 176px 116px 128px;align-items:center;padding:18px 16px;border-bottom:1px solid #E8E8EC">
+          <div>
+            <a class="dcx2" href="#1e" style="font-size:15px;font-weight:500;color:#0F0F14;text-decoration:none;transition:color 340ms cubic-bezier(0.16,1,0.3,1)">Avurudu reel — the kitchen table cut</a>
+            <div style="margin:3px 0 0;font:400 12.5px 'Plus Jakarta Sans',system-ui,sans-serif;color:#9A9AA4">13 Apr · reel</div>
+          </div>
+          <div style="justify-self:stretch;position:relative;padding:8px 0">
+            <div style="position:absolute;right:0;top:0;bottom:0;border-radius:3px;width: 100%;background: #4F46E5"></div>
+            <span style="position:relative;display:block;text-align:right;font-size:15px;font-weight:500;font-variant-numeric:tabular-nums;color:#0F0F14">4,120</span>
+          </div>
+          <span style="text-align:right;font:400 15px 'Plus Jakarta Sans',system-ui,sans-serif;font-variant-numeric:tabular-nums;color:#5C5C68">286</span>
+          <span style="text-align:right;font:400 15px 'Plus Jakarta Sans',system-ui,sans-serif;font-variant-numeric:tabular-nums;color:#5C5C68">9.1%</span>
+        </div>
+      
+        <div style="display:grid;grid-template-columns:1fr 176px 116px 128px;align-items:center;padding:18px 16px;border-bottom:1px solid #E8E8EC">
+          <div>
+            <a class="dcx3" href="#1e" style="font-size:15px;font-weight:500;color:#0F0F14;text-decoration:none;transition:color 340ms cubic-bezier(0.16,1,0.3,1)">New 90g bar, shelf shot</a>
+            <div style="margin:3px 0 0;font:400 12.5px 'Plus Jakarta Sans',system-ui,sans-serif;color:#9A9AA4">2 Apr · still</div>
+          </div>
+          <div style="justify-self:stretch;position:relative;padding:8px 0">
+            <div style="position:absolute;right:0;top:0;bottom:0;border-radius:3px;width: 72%;background: rgba(79,70,229,.26)"></div>
+            <span style="position:relative;display:block;text-align:right;font-size:15px;font-weight:500;font-variant-numeric:tabular-nums;color:#0F0F14">2,884</span>
+          </div>
+          <span style="text-align:right;font:400 15px 'Plus Jakarta Sans',system-ui,sans-serif;font-variant-numeric:tabular-nums;color:#5C5C68">104</span>
+          <span style="text-align:right;font:400 15px 'Plus Jakarta Sans',system-ui,sans-serif;font-variant-numeric:tabular-nums;color:#5C5C68">6.2%</span>
+        </div>
+      
+        <div style="display:grid;grid-template-columns:1fr 176px 116px 128px;align-items:center;padding:18px 16px;border-bottom:1px solid #E8E8EC">
+          <div>
+            <a class="dcx4" href="#1e" style="font-size:15px;font-weight:500;color:#0F0F14;text-decoration:none;transition:color 340ms cubic-bezier(0.16,1,0.3,1)">Factory floor, tempering line</a>
+            <div style="margin:3px 0 0;font:400 12.5px 'Plus Jakarta Sans',system-ui,sans-serif;color:#9A9AA4">27 Mar · reel</div>
+          </div>
+          <div style="justify-self:stretch;position:relative;padding:8px 0">
+            <div style="position:absolute;right:0;top:0;bottom:0;border-radius:3px;width: 56%;background: rgba(79,70,229,.26)"></div>
+            <span style="position:relative;display:block;text-align:right;font-size:15px;font-weight:500;font-variant-numeric:tabular-nums;color:#0F0F14">2,301</span>
+          </div>
+          <span style="text-align:right;font:400 15px 'Plus Jakarta Sans',system-ui,sans-serif;font-variant-numeric:tabular-nums;color:#5C5C68">97</span>
+          <span style="text-align:right;font:400 15px 'Plus Jakarta Sans',system-ui,sans-serif;font-variant-numeric:tabular-nums;color:#5C5C68">5.0%</span>
+        </div>
+      
+        <div style="display:grid;grid-template-columns:1fr 176px 116px 128px;align-items:center;padding:18px 16px;border-bottom:1px solid #E8E8EC">
+          <div>
+            <a class="dcx5" href="#1e" style="font-size:15px;font-weight:500;color:#0F0F14;text-decoration:none;transition:color 340ms cubic-bezier(0.16,1,0.3,1)">Ramadan hamper giveaway</a>
+            <div style="margin:3px 0 0;font:400 12.5px 'Plus Jakarta Sans',system-ui,sans-serif;color:#9A9AA4">19 Mar · carousel</div>
+          </div>
+          <div style="justify-self:stretch;position:relative;padding:8px 0">
+            <div style="position:absolute;right:0;top:0;bottom:0;border-radius:3px;width: 43%;background: rgba(79,70,229,.26)"></div>
+            <span style="position:relative;display:block;text-align:right;font-size:15px;font-weight:500;font-variant-numeric:tabular-nums;color:#0F0F14">1,760</span>
+          </div>
+          <span style="text-align:right;font:400 15px 'Plus Jakarta Sans',system-ui,sans-serif;font-variant-numeric:tabular-nums;color:#5C5C68">412</span>
+          <span style="text-align:right;font:400 15px 'Plus Jakarta Sans',system-ui,sans-serif;font-variant-numeric:tabular-nums;color:#5C5C68">4.5%</span>
+        </div>
+      
+        <div style="display:grid;grid-template-columns:1fr 176px 116px 128px;align-items:center;padding:18px 16px;border-bottom:1px solid #E8E8EC">
+          <div>
+            <a class="dcx6" href="#1e" style="font-size:15px;font-weight:500;color:#0F0F14;text-decoration:none;transition:color 340ms cubic-bezier(0.16,1,0.3,1)">Team at the Colombo pop-up</a>
+            <div style="margin:3px 0 0;font:400 12.5px 'Plus Jakarta Sans',system-ui,sans-serif;color:#9A9AA4">11 Mar · still</div>
+          </div>
+          <div style="justify-self:stretch;position:relative;padding:8px 0">
+            <div style="position:absolute;right:0;top:0;bottom:0;border-radius:3px;width: 29%;background: rgba(79,70,229,.26)"></div>
+            <span style="position:relative;display:block;text-align:right;font-size:15px;font-weight:500;font-variant-numeric:tabular-nums;color:#0F0F14">1,204</span>
+          </div>
+          <span style="text-align:right;font:400 15px 'Plus Jakarta Sans',system-ui,sans-serif;font-variant-numeric:tabular-nums;color:#5C5C68">58</span>
+          <span style="text-align:right;font:400 15px 'Plus Jakarta Sans',system-ui,sans-serif;font-variant-numeric:tabular-nums;color:#5C5C68">2.6%</span>
+        </div>
+      
+    </div>
+    <div style="display:flex;gap:20px;margin:64px 0 0;align-items:stretch">
+      <div style="flex:1 1 0;border:1px dashed #E8E8EC;border-radius:18px;padding:28px 30px">
+        <div style="font:500 12px 'Plus Jakarta Sans',system-ui,sans-serif;color:#9A9AA4">Only you can see these</div>
+        <p style="margin:14px 0 0;font-size:14px;line-height:1.65;color:#5C5C68">Reach, impressions and saves are never rendered publicly by Instagram, so no one can read them from outside — including us. Connect the account and Nova records them alongside the rest.</p>
+        <div style="display:flex;flex-direction:column;gap:12px;margin:22px 0 0">
+          <div style="display:flex;align-items:baseline;justify-content:space-between;padding:12px 0;border-bottom:1px solid #E8E8EC">
+            <span style="font-size:14.5px;font-weight:500;color:#0F0F14">Reach</span>
+            <span style="font:400 14px 'Plus Jakarta Sans',system-ui,sans-serif;color:#9A9AA4">not public</span>
+          </div>
+          <div style="display:flex;align-items:baseline;justify-content:space-between;padding:12px 0;border-bottom:1px solid #E8E8EC">
+            <span style="font-size:14.5px;font-weight:500;color:#0F0F14">Impressions</span>
+            <span style="font:400 14px 'Plus Jakarta Sans',system-ui,sans-serif;color:#9A9AA4">not public</span>
+          </div>
+          <div style="display:flex;align-items:baseline;justify-content:space-between;padding:12px 0">
+            <span style="font-size:14.5px;font-weight:500;color:#0F0F14">Saves</span>
+            <span style="font:400 14px 'Plus Jakarta Sans',system-ui,sans-serif;color:#9A9AA4">not public</span>
+          </div>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:10px;margin:22px 0 0">
+          <button class="dcx7" style="font-family:inherit;display:inline-flex;align-items:center;gap:9px;font-size:13.5px;font-weight:600;color:#FFFFFF;background:linear-gradient(45deg,#FDCB52,#F5811F 26%,#DD2A7B 58%,#8134AF 92%);border:none;border-radius:14px;padding:12px 18px;cursor:pointer;transition:filter 340ms cubic-bezier(0.16,1,0.3,1)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.9" style="flex:none"><rect x="3" y="3" width="18" height="18" rx="5.4"></rect><circle cx="12" cy="12" r="4.1"></circle><circle cx="17.3" cy="6.7" r="1.1" fill="#FFFFFF" stroke="none"></circle></svg>Instagram</button>
+          <button class="dcx8" style="font-family:inherit;display:inline-flex;align-items:center;gap:9px;font-size:13.5px;font-weight:600;color:#FFFFFF;background:#0F0F14;border:none;border-radius:14px;padding:12px 18px;cursor:pointer;transition:background 340ms cubic-bezier(0.16,1,0.3,1)"><svg width="16" height="16" viewBox="0 0 24 24" style="flex:none"><path d="M16.6 2h-3.1v12.1a2.6 2.6 0 1 1-1.9-2.5V8.5a5.8 5.8 0 1 0 5 5.7V9.1a5.6 5.6 0 0 0 3.2 1V7a3.6 3.6 0 0 1-3.2-3.4V2Z" fill="#25F4EE" transform="translate(-1.3,-.9)"></path><path d="M16.6 2h-3.1v12.1a2.6 2.6 0 1 1-1.9-2.5V8.5a5.8 5.8 0 1 0 5 5.7V9.1a5.6 5.6 0 0 0 3.2 1V7a3.6 3.6 0 0 1-3.2-3.4V2Z" fill="#FE2C55" transform="translate(1.3,.9)"></path><path d="M16.6 2h-3.1v12.1a2.6 2.6 0 1 1-1.9-2.5V8.5a5.8 5.8 0 1 0 5 5.7V9.1a5.6 5.6 0 0 0 3.2 1V7a3.6 3.6 0 0 1-3.2-3.4V2Z" fill="#FFFFFF"></path></svg>TikTok</button>
+          <button class="dcx9" style="font-family:inherit;display:inline-flex;align-items:center;gap:9px;font-size:13.5px;font-weight:600;color:#FFFFFF;background:#FF0000;border:none;border-radius:14px;padding:12px 18px;cursor:pointer;transition:filter 340ms cubic-bezier(0.16,1,0.3,1)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="flex:none"><rect x="2.4" y="5.4" width="19.2" height="13.2" rx="4" fill="#FFFFFF"></rect><path d="M10.4 9.2l4.8 2.8-4.8 2.8V9.2Z" fill="#FF0000"></path></svg>YouTube</button>
+        </div>
+      </div>
+      <div style="flex:1 1 0;background:#FFFFFF;border:1px solid #E8E8EC;border-radius:18px;padding:26px 28px;display:flex;flex-direction:column;z-index:20;position: static;inset: auto">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;padding:0 0 16px;border-bottom:1px solid #E8E8EC">
+          <div style="display:flex;align-items:center;gap:11px">
+            <span style="width:32px;height:32px;border-radius:10px;background:#4F46E5;display:grid;place-items:center;flex:none"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M5.4 17.2 11.6 11.4 18.8 6.4" stroke="rgba(255,255,255,.85)" stroke-width="1.9" stroke-linecap="round"></path><circle cx="5.4" cy="17.2" r="2.2" fill="#FFFFFF"></circle><circle cx="18.8" cy="6.4" r="2.9" fill="#FFFFFF"></circle></svg></span>
+            <div>
+              <div style="font-family:'Space Grotesk',system-ui,sans-serif;font-size:17px;font-weight:500;letter-spacing:-.02em;color:#0F0F14">NuNu</div>
+              <div style="display:flex;align-items:center;gap:6px;margin:1px 0 0;font-size:12.5px;color:#5C5C68"><span style="width:6px;height:6px;border-radius:999px;background:#0F7B4F"></span>reads @kandos.lk only</div>
+            </div>
+          </div>
+          <button class="dcx10" data-action="onNunuToggle" aria-label="Toggle fullscreen" style="font-family:inherit;display:grid;place-items:center;width:34px;height:34px;background:#FFFFFF;border:1px solid #E8E8EC;border-radius:10px;cursor:pointer;transition:border-color 340ms cubic-bezier(0.16,1,0.3,1)">
+            <div data-when="nunuFull" hidden>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0F0F14" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3v6H3M15 21v-6h6M3 15h6v6M21 9h-6V3"></path></svg>
+            </div>
+            <div data-when="nunuBoxed" hidden>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0F0F14" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 15v5h-5M4 15v5h5M20 9V4h-5"></path></svg>
+            </div>
+          </button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:16px;margin:20px 0 0;flex:1 1 0;min-height:300px;overflow-y:auto">
+          <div style="align-self:flex-end;max-width:80%;background:#4F46E5;border-radius:16px 16px 4px 16px;padding:12px 16px;font-size:14px;line-height:1.55;color:#FFFFFF">Did the Avurudu reel do better than our usual posts?</div>
+          <div style="display:flex;gap:10px;align-self:flex-start;max-width:92%">
+            <span style="width:26px;height:26px;border-radius:8px;background:#EEF0FE;display:grid;place-items:center;flex:none;margin-top:2px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5.4 17.2 11.6 11.4 18.8 6.4" stroke="rgba(79,70,229,.75)" stroke-width="1.9" stroke-linecap="round"></path><circle cx="5.4" cy="17.2" r="2.2" fill="#4F46E5"></circle><circle cx="18.8" cy="6.4" r="2.9" fill="#4F46E5"></circle></svg></span>
+            <div style="background:#EEF0FE;border-radius:16px 16px 16px 4px;padding:13px 16px;font-size:14px;line-height:1.65;color:#0F0F14">Yes. It took <span style="font-weight:600;font-variant-numeric:tabular-nums">4,120</span> likes against a 30-day average of <span style="font-weight:600;font-variant-numeric:tabular-nums">1,942</span> — about <span style="font-weight:600;font-variant-numeric:tabular-nums">2.1×</span>. Comments ran <span style="font-weight:600;font-variant-numeric:tabular-nums">3.4×</span> higher. Reach is not public, so I cannot say how many people saw it.</div>
+          </div>
+          <div style="align-self:flex-end;max-width:80%;background:#4F46E5;border-radius:16px 16px 4px 16px;padding:12px 16px;font-size:14px;line-height:1.55;color:#FFFFFF">How is Munchee doing?</div>
+          <div style="display:flex;gap:10px;align-self:flex-start;max-width:92%">
+            <span style="width:26px;height:26px;border-radius:8px;background:#EEF0FE;display:grid;place-items:center;flex:none;margin-top:2px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5.4 17.2 11.6 11.4 18.8 6.4" stroke="rgba(79,70,229,.75)" stroke-width="1.9" stroke-linecap="round"></path><circle cx="5.4" cy="17.2" r="2.2" fill="#4F46E5"></circle><circle cx="18.8" cy="6.4" r="2.9" fill="#4F46E5"></circle></svg></span>
+            <div style="background:#EEF0FE;border-radius:16px 16px 16px 4px;padding:13px 16px;font-size:14px;line-height:1.65;color:#0F0F14">I only read the accounts you have connected, so I cannot answer for another brand. Ask me anything about @kandos.lk.</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 0">
+          <button class="dcx11" style="font-family:inherit;font-size:12.5px;font-weight:500;color:#0F0F14;background:#F4F4F7;border:none;border-radius:999px;padding:8px 14px;cursor:pointer;transition:background 340ms cubic-bezier(0.16,1,0.3,1)">Compare to March</button>
+          <button class="dcx12" style="font-family:inherit;font-size:12.5px;font-weight:500;color:#0F0F14;background:#F4F4F7;border:none;border-radius:999px;padding:8px 14px;cursor:pointer;transition:background 340ms cubic-bezier(0.16,1,0.3,1)">What should we post next?</button>
+          <button class="dcx13" style="font-family:inherit;font-size:12.5px;font-weight:500;color:#0F0F14;background:#F4F4F7;border:none;border-radius:999px;padding:8px 14px;cursor:pointer;transition:background 340ms cubic-bezier(0.16,1,0.3,1)">Why did comments spike?</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;margin:14px 0 0;border:1px solid #E8E8EC;border-radius:14px;padding:5px 5px 5px 16px">
+          <input placeholder="Ask about your account" style="flex:1 1 0;font-family:inherit;font-size:14px;color:#0F0F14;border:none;outline:none;padding:11px 0;background:none">
+          <button class="dcx14" aria-label="Send" style="font-family:inherit;display:grid;place-items:center;width:36px;height:36px;color:#FFFFFF;background:#4F46E5;border:none;border-radius:11px;cursor:pointer;transition:background 340ms cubic-bezier(0.16,1,0.3,1)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5.5 11.5 12 5l6.5 6.5"></path></svg></button>
+<dialog id="postDialog" style="border:1px solid #E8E8EC;border-radius:8px;padding:0;width:600px;max-width:94%;background:#FFFFFF">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:56px;border-bottom:1px solid #E8E8EC">
+    <div style="display:flex;align-items:center;gap:10px">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5C5C68" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg>
+      <span style="font-size:14px;font-weight:500;color:#5C5C68">Top posts</span>
+    </div>
+    <span style="display:inline-flex;align-items:center;gap:7px;border:1px solid rgba(221,42,123,.4);border-radius:4px;padding:4px 9px;font-size:12.5px;font-weight:600;color:#0F0F14"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="igRow" x1="2" y1="22" x2="22" y2="2" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#FDCB52"></stop><stop offset=".3" stop-color="#F5811F"></stop><stop offset=".6" stop-color="#DD2A7B"></stop><stop offset="1" stop-color="#8134AF"></stop></linearGradient></defs><rect x="3" y="3" width="18" height="18" rx="5.4" stroke="url(#igRow)" stroke-width="2.1"></rect><circle cx="12" cy="12" r="4.1" stroke="url(#igRow)" stroke-width="2.1"></circle></svg>Reel</span>
   </div>
-</section>
-
-<footer>
-  <span id="mode">Sample data — real figures captured from the live API.</span>
-  &nbsp;·&nbsp; <a href="./">Start over</a> &nbsp;·&nbsp; <a href="./review.html">Review queue</a>
-</footer>
-
-<dialog id="post">
-  <button class="x" id="postClose" aria-label="Close">&times;</button>
-  <div id="postBody"></div>
-</dialog>
-</div>
-<script src="./sample-data.js?v=1787579639"></script>
-<script src="./dashboard.js?v=1787579639"></script>
+  <div style="padding:32px 40px 40px">
+    <div style="font-size:12.5px;font-weight:600;color:#5C5C68">13 April 2026 · 18:40</div>
+    <h1 style="margin:12px 0 0;font-size:30px;font-weight:200;line-height:1.12;letter-spacing:-.035em;color:#0F0F14">Avurudu reel — the kitchen table cut</h1>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:28px 0 0">
+      <div style="background:#F4F4F7;border-radius:16px;padding:18px 20px">
+        <div style="font-size:12.5px;font-weight:500;color:#5C5C68">Likes</div>
+        <div style="margin:8px 0 0;font-size:28px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-.02em;color:#0F0F14">4,120</div>
+        <div style="margin:4px 0 0;font-size:12.5px;color:#5C5C68">2.1× your 30-day average</div>
+      </div>
+      <div style="background:#F4F4F7;border-radius:16px;padding:18px 20px">
+        <div style="font-size:12.5px;font-weight:500;color:#5C5C68">Comments</div>
+        <div style="margin:8px 0 0;font-size:28px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-.02em;color:#0F0F14">286</div>
+        <div style="margin:4px 0 0;font-size:12.5px;color:#5C5C68">3.4× your average</div>
+      </div>
+      <div style="background:#F4F4F7;border-radius:16px;padding:18px 20px">
+        <div style="font-size:12.5px;font-weight:500;color:#5C5C68">Engagement</div>
+        <div style="margin:8px 0 0;font-size:28px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-.02em;color:#0F0F14">9.1%</div>
+        <div style="margin:4px 0 0;font-size:12.5px;color:#5C5C68">of 48,210 followers</div>
+      </div>
+      <div style="border:1px dashed #E8E8EC;border-radius:16px;padding:18px 20px">
+        <div style="font-size:12.5px;font-weight:500;color:#5C5C68">Reach, saves</div>
+        <div style="margin:8px 0 0;font-size:20px;font-weight:300;letter-spacing:-.02em;color:#9A9AA4">Not public</div>
+        <div style="margin:4px 0 0;font-size:12.5px;color:#5C5C68">connect to record these</div>
+      </div>
+    </div>
+    <div style="margin:36px 0 0">
+      <h2 style="margin:0;font-size:17px;font-weight:600;letter-spacing:-.01em;color:#0F0F14">What people said</h2>
+      <p style="margin:6px 0 0;font-size:13px;color:#5C5C68">286 comments, grouped by what they were about.</p>
+      <div style="display:flex;flex-direction:column;gap:14px;margin:20px 0 0">
+        <div style="display:flex;gap:14px;align-items:flex-start;padding:0 0 14px;border-bottom:1px solid #E8E8EC">
+          <span style="font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;color:#4F46E5;width:38px;flex:none">96</span>
+          <div style="flex:1 1 0">
+            <div style="font-size:14.5px;font-weight:500;color:#0F0F14">Asking where to buy it</div>
+            <div style="margin:4px 0 0;font-size:13.5px;line-height:1.55;color:#5C5C68">"Is this in Keells or only your shops?"</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:14px;align-items:flex-start;padding:0 0 14px;border-bottom:1px solid #E8E8EC">
+          <span style="font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;color:#4F46E5;width:38px;flex:none">74</span>
+          <div style="flex:1 1 0">
+            <div style="font-size:14.5px;font-weight:500;color:#0F0F14">Avurudu memories</div>
+            <div style="margin:4px 0 0;font-size:13.5px;line-height:1.55;color:#5C5C68">"This is exactly our table at home."</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:14px;align-items:flex-start">
+          <span style="font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;color:#8A6100;width:38px;flex:none">22</span>
+          <div style="flex:1 1 0">
+            <div style="font-size:14.5px;font-weight:500;color:#0F0F14">Price complaints</div>
+            <div style="margin:4px 0 0;font-size:13.5px;line-height:1.55;color:#5C5C68">"Bar got smaller, price got bigger."</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="margin:32px 0 0;background:#EEF0FE;border-radius:18px;padding:22px 24px">
+      <div style="display:flex;align-items:center;gap:9px">
+        <span style="width:22px;height:22px;border-radius:7px;background:#4F46E5;display:grid;place-items:center;flex:none"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5.4 17.2 11.6 11.4 18.8 6.4" stroke="rgba(255,255,255,.85)" stroke-width="1.9" stroke-linecap="round"></path><circle cx="5.4" cy="17.2" r="2.2" fill="#FFFFFF"></circle><circle cx="18.8" cy="6.4" r="2.9" fill="#FFFFFF"></circle></svg></span>
+        <span style="font-size:15px;font-weight:600;color:#0F0F14">NuNu</span>
+        <span style="font-size:12.5px;color:#5C5C68">what to do next</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin:16px 0 0">
+        <div style="display:flex;gap:14px;background:#FFFFFF;border-radius:12px;padding:16px 18px">
+          <span style="width:22px;height:22px;border-radius:7px;background:#EEF0FE;display:grid;place-items:center;flex:none;font-size:12px;font-weight:600;font-variant-numeric:tabular-nums;color:#4F46E5">1</span>
+          <div style="flex:1 1 0">
+            <div style="display:flex;align-items:baseline;gap:8px">
+              <span style="font-size:14.5px;font-weight:600;color:#0F0F14">Answer the buying question once</span>
+              <span style="font-size:12px;font-weight:500;color:#4F46E5">today</span>
+            </div>
+            <p style="margin:5px 0 0;font-size:13.5px;line-height:1.6;color:#5C5C68">Ninety-six comments asked where to buy it — a third of the thread. Post the stockist list as one reply and pin it.</p>
+          </div>
+        </div>
+        <div style="display:flex;gap:14px;background:#FFFFFF;border-radius:12px;padding:16px 18px">
+          <span style="width:22px;height:22px;border-radius:7px;background:#EEF0FE;display:grid;place-items:center;flex:none;font-size:12px;font-weight:600;font-variant-numeric:tabular-nums;color:#4F46E5">2</span>
+          <div style="flex:1 1 0">
+            <div style="display:flex;align-items:baseline;gap:8px">
+              <span style="font-size:14.5px;font-weight:600;color:#0F0F14">Keep the kitchen-table framing</span>
+              <span style="font-size:12px;font-weight:500;color:#4F46E5">next four posts</span>
+            </div>
+            <p style="margin:5px 0 0;font-size:13.5px;line-height:1.6;color:#5C5C68">It outperformed your studio shots 2.1×. Two of the next four posts could use the same setup.</p>
+          </div>
+        </div>
+        <div style="display:flex;gap:14px;background:#FFFFFF;border-radius:12px;padding:16px 18px">
+          <span style="width:22px;height:22px;border-radius:7px;background:#EEF0FE;display:grid;place-items:center;flex:none;font-size:12px;font-weight:600;font-variant-numeric:tabular-nums;color:#4F46E5">3</span>
+          <div style="flex:1 1 0">
+            <div style="display:flex;align-items:baseline;gap:8px">
+              <span style="font-size:14.5px;font-weight:600;color:#0F0F14">Connect the account for reach</span>
+              <span style="font-size:12px;font-weight:500;color:#4F46E5">one-off</span>
+            </div>
+            <p style="margin:5px 0 0;font-size:13.5px;line-height:1.6;color:#5C5C68">Reach is not public, so I cannot tell you how many people saw this. Connect once and the next reel will have it.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;margin:28px 0 0">
+      <a class="dcx1" href="#1e" style="display:inline-flex;align-items:center;gap:9px;font-size:14px;font-weight:600;color:#FFFFFF;background:linear-gradient(45deg,#FDCB52,#F5811F 26%,#DD2A7B 58%,#8134AF 92%);border-radius:14px;padding:13px 22px;text-decoration:none;transition:filter 340ms cubic-bezier(0.16,1,0.3,1)">View the post ↗</a>
+      <button class="dcx2" style="font-family:inherit;font-size:14px;font-weight:600;color:#0F0F14;background:#FFFFFF;border:1px solid #E8E8EC;border-radius:14px;padding:13px 20px;cursor:pointer;transition:border-color 340ms cubic-bezier(0.16,1,0.3,1)">Ask NuNu about this post</button></dialog>
+</div></div>
+<script src="./dash.js"></script>
 </body>
 </html>

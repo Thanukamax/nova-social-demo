@@ -3,259 +3,181 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Connect your accounts — Nova</title>
-<meta name="description" content="Brand social onboarding for NovaDrop.">
+<title>Connect your account — Nova Social</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200..800&family=Space+Grotesk:wght@400..600&display=swap" rel="stylesheet">
 <style>
-:root{
-  --ink:#0F0F14; --muted:#5C5C68; --faint:#9A9AA4;
-  --accent:#4F46E5; --accent-soft:#F1F0FE;
-  --line:#E8E8EC; --bg:#FFFFFF; --sunk:#FAFAFB;
-  --ok:#0F7B4F; --warn:#8A6100; --warn-soft:#FDF6E7;
-  --sans:'Plus Jakarta Sans',system-ui,-apple-system,sans-serif;
-  --mono:'JetBrains Mono',ui-monospace,monospace;
-  /* Nova's measured motion: entry is slower than release, ratio ~1.5.
-     The applied duration is the one on the state being transitioned TO. */
-  --dur-in:500ms; --dur-out:340ms;
-  --ease:cubic-bezier(0.16,1,0.3,1);
-}
-*{box-sizing:border-box}
-html,body{margin:0;height:100%}
-body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;
-     line-height:1.65;-webkit-font-smoothing:antialiased;display:flex;flex-direction:column}
-
-header{display:flex;align-items:center;justify-content:space-between;
-       padding:28px 32px;max-width:1080px;margin:0 auto;width:100%}
-.word{font-size:20px;font-weight:600;letter-spacing:.22em;text-decoration:none;color:var(--ink)}
-.mode{font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--muted);
-      border:1px solid var(--line);border-radius:999px;padding:5px 12px;cursor:pointer;
-      background:none;transition:border-color var(--dur-out) var(--ease),color var(--dur-out) var(--ease)}
-.mode:hover{border-color:var(--accent);color:var(--accent);transition-duration:var(--dur-in)}
-
-main{flex:1;display:flex;align-items:flex-start;justify-content:center;padding:40px 32px 120px}
-.stage{width:100%;max-width:560px;position:relative}
-
-h1{font-size:clamp(30px,5vw,42px);font-weight:200;letter-spacing:-.035em;line-height:1.12;
-   margin:0 0 14px;text-wrap:balance}
-.lede{color:var(--muted);font-size:17px;font-weight:300;margin:0 0 40px;max-width:46ch}
-
-.steps{display:flex;gap:7px;margin-bottom:36px}
-.pip{height:2px;flex:1;background:var(--line);border-radius:2px;
-     transition:background var(--dur-in) var(--ease)}
-.pip.on{background:var(--accent)}
-
-label{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.08em;
-      text-transform:uppercase;color:var(--faint);margin-bottom:9px}
-.platforms{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:26px}
-.plat{font-family:inherit;font-size:14.5px;color:var(--ink);background:var(--bg);
-      border:1px solid var(--line);border-radius:14px;padding:14px 10px;cursor:pointer;
-      transition:border-color var(--dur-out) var(--ease),background var(--dur-out) var(--ease)}
-.plat:hover{border-color:var(--accent);transition-duration:var(--dur-in)}
-.plat[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
-.plat:active{transform:scale(.97)}
-
-.field{display:flex;gap:10px;align-items:stretch}
-input{flex:1;font-family:var(--mono);font-size:15px;color:var(--ink);background:var(--bg);
-      border:1px solid var(--line);border-radius:14px;padding:15px 17px;outline:none;
-      transition:border-color var(--dur-out) var(--ease)}
-input:focus{border-color:var(--accent);transition-duration:var(--dur-in)}
-input::placeholder{color:var(--faint)}
-
-button.go{font-family:inherit;font-size:15px;font-weight:500;color:#fff;background:var(--accent);
-      border:1px solid var(--accent);border-radius:14px;padding:15px 26px;cursor:pointer;
-      transition:opacity var(--dur-out) var(--ease)}
-button.go:hover{opacity:.88;transition-duration:var(--dur-in)}
-button.go:active{transform:scale(.97)}
-button.go:disabled{opacity:.35;cursor:not-allowed;transform:none}
-button.ghost{font-family:inherit;font-size:14px;color:var(--muted);background:none;border:0;
-      cursor:pointer;padding:12px 4px;transition:color var(--dur-out) var(--ease)}
-button.ghost:hover{color:var(--accent);transition-duration:var(--dur-in)}
-
-/* Step transitions. Entry is slower than exit — a screen should arrive
-   deliberately and leave without ceremony. */
-.panel{opacity:0;transform:translateY(10px);filter:blur(3px);
-       transition:opacity var(--dur-in) var(--ease),transform var(--dur-in) var(--ease),
-                  filter var(--dur-in) var(--ease);
-       position:absolute;inset:0;pointer-events:none}
-.panel.live{opacity:1;transform:none;filter:none;position:relative;pointer-events:auto}
-.panel.leaving{opacity:0;transform:translateY(-6px);filter:blur(2px);
-       transition-duration:var(--dur-out)}
-
-/* The verify step is a real network call taking seconds. Without an honest
-   waiting state it reads as a hang, which is the one motion gap in this flow. */
-.waiting{display:flex;align-items:center;gap:14px;color:var(--muted);font-size:15px;
-         padding:26px 0}
-.pulse{width:9px;height:9px;border-radius:50%;background:var(--accent);
-       animation:breathe 1.6s var(--ease) infinite}
-@keyframes breathe{0%,100%{opacity:.25;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
-.skeleton{height:14px;border-radius:6px;background:linear-gradient(90deg,var(--sunk),var(--line),var(--sunk));
-          background-size:200% 100%;animation:sweep 1.4s linear infinite}
-@keyframes sweep{to{background-position:-200% 0}}
-
-.card{border:1px solid var(--line);border-radius:22px;padding:26px;margin-bottom:20px}
-.who{display:flex;align-items:center;gap:16px;margin-bottom:22px}
-.avatar{width:54px;height:54px;border-radius:50%;background:var(--accent-soft);color:var(--accent);
-        display:grid;place-items:center;font-size:20px;font-weight:500;flex:none}
-.who h2{font-size:19px;font-weight:500;letter-spacing:-.015em;margin:0 0 2px}
-.handle{font-family:var(--mono);font-size:13px;color:var(--muted)}
-.badge{display:inline-block;font-family:var(--mono);font-size:10px;letter-spacing:.06em;
-       color:var(--ok);border:1px solid var(--ok);border-radius:999px;padding:2px 8px;margin-left:8px}
-
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;background:var(--line);
-       border-radius:14px;overflow:hidden}
-.stat{background:var(--bg);padding:16px 14px}
-.stat .n{font-family:var(--mono);font-size:20px;font-weight:500;font-variant-numeric:tabular-nums;
-         display:block;letter-spacing:-.02em}
-.stat .k{font-size:11.5px;color:var(--faint);letter-spacing:.03em}
-
-.warn{display:flex;gap:12px;background:var(--warn-soft);border-radius:14px;padding:15px 17px;
-      margin-bottom:20px;font-size:14.5px;color:var(--warn);line-height:1.55}
-.warn b{font-weight:600}
-
-.locked{border:1px dashed var(--line);border-radius:16px;padding:18px 20px;margin-top:20px}
-.locked h3{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;
-           color:var(--faint);margin:0 0 10px;font-weight:500}
-.locked p{margin:0;font-size:14px;color:var(--muted)}
-.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
-.chip{font-family:var(--mono);font-size:11px;color:var(--faint);border:1px solid var(--line);
-      border-radius:999px;padding:3px 10px}
-
-.row{display:flex;gap:12px;align-items:center;margin-top:8px}
-.note{font-size:13.5px;color:var(--faint);margin-top:22px;line-height:1.6}
-.err{color:#B4232C;font-size:14.5px;margin-top:14px}
-
-dialog{border:1px solid var(--line);border-radius:20px;padding:26px;max-width:440px;width:92%;
-       font-family:var(--sans);color:var(--ink)}
-dialog::backdrop{background:rgba(15,15,20,.35)}
-dialog h2{font-size:18px;font-weight:500;margin:0 0 8px;letter-spacing:-.015em}
-dialog p{font-size:14px;color:var(--muted);margin:0 0 18px}
-
-@media (prefers-reduced-motion: reduce){
-  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;
-    transition-duration:.01ms!important}
-  .panel{filter:none;transform:none}
-}
-:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:6px}
+/* Carried from the design file unchanged — the prototype's values are the spec. */
+body{margin:0;background:#EDEDF0;font-family:'Plus Jakarta Sans',system-ui,sans-serif}
+a{color:#4F46E5;text-decoration:none}
+a:hover{text-decoration:underline}
+@keyframes novaBreathe{0%,100%{opacity:.25;transform:scale(.85)}50%{opacity:1;transform:scale(1)}}
+.stage{min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:40px 24px 80px}
+.card{background:#FFFFFF;border:1px solid #E8E8EC;border-radius:8px;overflow:hidden;width:720px;max-width:100%}
+[hidden]{display:none!important}
+/* style-hover / style-active from the prototype, hoisted to real rules */
+.dcx1:hover{background:#4F46E5}
+.dcx2:hover{background:#4F46E5}
+.dcx3:hover{background:#4F46E5}
+.dcx4:hover{background:#4F46E5}
+.dcx5:active{transform:scale(.97)}
+.dcx6:active{transform:scale(.97)}
+.dcx7:active{transform:scale(.97)}
+.dcx8:hover{background:#4338CA}
+.dcx8:active{transform:scale(.97)}
+.dcx9:hover{background:#4338CA}
+.dcx9:active{transform:scale(.97)}
+.dcx10:hover{border-color:#0F0F14}
+.dcx10:active{transform:scale(.97)}
+.dcx11:hover{background:#4338CA;text-decoration:none}
+.dcx12:hover{border-color:#0F0F14}
+.dcx12:active{transform:scale(.97)}
+.dcx1:hover{background:#4338CA}
+.dcx1:active{transform:scale(.97)}
+.dcx2:hover{border-color:#0F0F14}
+.dcx2:active{transform:scale(.97)}
+@media (prefers-reduced-motion:reduce){*{transition-duration:.01ms!important;animation-duration:.01ms!important}}
 </style>
 </head>
 <body>
-<header>
-  <a class="word" href="./">NOVA</a>
-  <button class="mode" id="modeBtn">sample data</button>
-</header>
+<div class="stage"><div class="card">
 
-<main>
-<div class="stage">
-  <div class="steps" aria-hidden="true">
-    <span class="pip on" id="p1"></span><span class="pip" id="p2"></span><span class="pip" id="p3"></span>
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:56px;border-bottom:1px solid #E8E8EC">
+    <div style="display:flex;align-items:center;gap:10px">
+      <span style="width:24px;height:24px;border-radius:7px;background:#4F46E5;display:grid;place-items:center;flex:none"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M21.6 3 4.4 10.8l6.3 2.1 2.1 6.3L21.6 3Z" fill="#FFFFFF"></path><path d="M21.6 3 10.7 12.9" stroke="#4F46E5" stroke-width="1.25" stroke-linecap="round"></path><path d="M2.4 15.6h4M4.6 18.9h2.6" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" opacity=".72"></path></svg></span>
+      <span style="font-size:16px;font-weight:700;letter-spacing:-.02em;color:#0F0F14">nova</span>
+      <span style="font-family:'Space Grotesk',system-ui,sans-serif;font-size:16px;font-weight:500;letter-spacing:-.02em;color:#4F46E5">Social</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      
+        <button class="dcx1" onClick="step1" aria-label="Step 1" style="width:22px;height:5px;border:none;border-radius:999px;padding:0;cursor:pointer;transition:background 340ms cubic-bezier(0.16,1,0.3,1);background: #4F46E5"></button>
+      
+        <button class="dcx2" onClick="step2" aria-label="Step 2" style="width:22px;height:5px;border:none;border-radius:999px;padding:0;cursor:pointer;transition:background 340ms cubic-bezier(0.16,1,0.3,1);background: #E8E8EC"></button>
+      
+        <button class="dcx3" onClick="step3" aria-label="Step 3" style="width:22px;height:5px;border:none;border-radius:999px;padding:0;cursor:pointer;transition:background 340ms cubic-bezier(0.16,1,0.3,1);background: #E8E8EC"></button>
+      
+        <button class="dcx4" onClick="step4" aria-label="Step 4" style="width:22px;height:5px;border:none;border-radius:999px;padding:0;cursor:pointer;transition:background 340ms cubic-bezier(0.16,1,0.3,1);background: #E8E8EC"></button>
+      
+    </div>
   </div>
-
-  <!-- 1 ─ enter the handle -->
-  <section class="panel live" id="s1">
-    <h1>Connect your accounts</h1>
-    <p class="lede">Tell us where you post. We'll pull your follower count and post performance — you keep control, and you can disconnect any time.</p>
-
-    <label for="handle">Platform</label>
-    <div class="platforms">
-      <button class="plat" data-plat="instagram" aria-pressed="true">Instagram</button>
-      <button class="plat" data-plat="tiktok" aria-pressed="false">TikTok</button>
-      <button class="plat" data-plat="youtube" aria-pressed="false">YouTube</button>
+  <div style="padding:56px 80px 64px;min-height:520px;display:flex;flex-direction:column">
+    <div data-when="isStep1" hidden>
+      <div style="display:flex;flex-direction:column;gap:0">
+        <div style="font:500 12px/1 'Plus Jakarta Sans',system-ui,sans-serif;color:#9A9AA4">Step 1 of 4</div>
+        <h1 style="margin:18px 0 0;font-size:38px;font-weight:200;line-height:1.1;letter-spacing:-.035em;color:#0F0F14">Which account is yours?</h1>
+        <p style="margin:14px 0 0;font-size:15px;line-height:1.6;color:#5C5C68;max-width:44ch">Tell us the handle you post from. We will look it up and show you what we found before anything is tracked.</p>
+        <div style="display:flex;gap:10px;margin:32px 0 0">
+          <button class="dcx5" data-action="pickInstagram" style="font-family:inherit;display:inline-flex;align-items:center;gap:9px;font-size:14px;font-weight:600;color:#0F0F14;border-radius:14px;padding:12px 20px;cursor:pointer;transition:all 340ms cubic-bezier(0.16,1,0.3,1);background: rgba(221,42,123,.07);border:1px solid rgba(221,42,123,.45)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" style="flex:none"><defs><linearGradient id="igPick" x1="2" y1="22" x2="22" y2="2" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#FDCB52"></stop><stop offset=".3" stop-color="#F5811F"></stop><stop offset=".6" stop-color="#DD2A7B"></stop><stop offset="1" stop-color="#8134AF"></stop></linearGradient></defs><rect x="3" y="3" width="18" height="18" rx="5.4" stroke="url(#igPick)" stroke-width="1.9"></rect><circle cx="12" cy="12" r="4.1" stroke="url(#igPick)" stroke-width="1.9"></circle><circle cx="17.3" cy="6.7" r="1.1" fill="#DD2A7B"></circle></svg>Instagram</button>
+          <button class="dcx6" data-action="pickTikTok" style="font-family:inherit;display:inline-flex;align-items:center;gap:9px;font-size:14px;font-weight:600;color:#0F0F14;border-radius:14px;padding:12px 20px;cursor:pointer;transition:all 340ms cubic-bezier(0.16,1,0.3,1);background: #FFFFFF;border:1px solid #E8E8EC"><svg width="17" height="17" viewBox="0 0 24 24" style="flex:none"><path d="M16.6 2h-3.1v12.1a2.6 2.6 0 1 1-1.9-2.5V8.5a5.8 5.8 0 1 0 5 5.7V9.1a5.6 5.6 0 0 0 3.2 1V7a3.6 3.6 0 0 1-3.2-3.4V2Z" fill="#25F4EE" transform="translate(-1.4,-1)"></path><path d="M16.6 2h-3.1v12.1a2.6 2.6 0 1 1-1.9-2.5V8.5a5.8 5.8 0 1 0 5 5.7V9.1a5.6 5.6 0 0 0 3.2 1V7a3.6 3.6 0 0 1-3.2-3.4V2Z" fill="#FE2C55" transform="translate(1.4,1)"></path><path d="M16.6 2h-3.1v12.1a2.6 2.6 0 1 1-1.9-2.5V8.5a5.8 5.8 0 1 0 5 5.7V9.1a5.6 5.6 0 0 0 3.2 1V7a3.6 3.6 0 0 1-3.2-3.4V2Z" fill="#0F0F14"></path></svg>TikTok</button>
+          <button class="dcx7" data-action="pickYouTube" style="font-family:inherit;display:inline-flex;align-items:center;gap:9px;font-size:14px;font-weight:600;color:#0F0F14;border-radius:14px;padding:12px 20px;cursor:pointer;transition:all 340ms cubic-bezier(0.16,1,0.3,1);background: #FFFFFF;border:1px solid #E8E8EC"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" style="flex:none"><rect x="2.4" y="5.4" width="19.2" height="13.2" rx="4" fill="#FF0000"></rect><path d="M10.4 9.2l4.8 2.8-4.8 2.8V9.2Z" fill="#FFFFFF"></path></svg>YouTube</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:2px;margin:20px 0 0;border:1px solid #E8E8EC;border-radius:14px;padding:4px 4px 4px 16px;background:#FFFFFF">
+          <span style="font:400 15px 'Plus Jakarta Sans',system-ui,sans-serif;color:#9A9AA4">@</span>
+          <input value="kandos.lk" onChange="onHandle" placeholder="yourbrand" style="flex:1 1 0;font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:15px;color:#0F0F14;border:none;outline:none;padding:12px 8px;background:none">
+          <button class="dcx8" data-action="onLookup" style="font-family:inherit;font-size:14px;font-weight:600;color:#FFFFFF;background:#4F46E5;border:none;border-radius:12px;padding:12px 22px;cursor:pointer;transition:background 340ms cubic-bezier(0.16,1,0.3,1)">Look it up</button>
+        </div>
+        <p style="margin:14px 0 0;font-size:13px;line-height:1.6;color:#9A9AA4">Nothing is connected yet. This only reads what the account already shows publicly.</p>
+      </div>
     </div>
-
-    <label for="handle">Your handle</label>
-    <div class="field">
-      <input id="handle" placeholder="daraz.lk" autocomplete="off" spellcheck="false">
-      <button class="go" id="verifyBtn">Find it</button>
-    </div>
-    <p class="note" id="modeHint"></p>
-    <p class="err" id="err1" hidden></p>
-  </section>
-
-  <!-- 2 ─ looking it up -->
-  <section class="panel" id="s2" aria-live="polite">
-    <h1>Looking that up</h1>
-    <p class="lede">Checking the account exists and pulling its public numbers.</p>
-    <div class="waiting"><span class="pulse"></span><span id="waitMsg">Contacting the platform…</span></div>
-    <div class="card">
-      <div class="who">
-        <div class="avatar" style="background:var(--sunk)"></div>
-        <div style="flex:1">
-          <div class="skeleton" style="width:52%;margin-bottom:9px"></div>
-          <div class="skeleton" style="width:32%;height:11px"></div>
+    <div data-when="isStep2" hidden>
+      <div style="display:flex;flex-direction:column;gap:0">
+        <div style="font:500 12px/1 'Plus Jakarta Sans',system-ui,sans-serif;color:#9A9AA4">Step 2 of 4</div>
+        <h1 style="margin:18px 0 0;font-size:38px;font-weight:200;line-height:1.1;letter-spacing:-.035em;color:#0F0F14">Looking up @kandos.lk</h1>
+        <div style="display:flex;align-items:center;gap:10px;margin:16px 0 0">
+          <span style="width:8px;height:8px;border-radius:999px;background:#4F46E5;animation:novaBreathe 1600ms ease-in-out infinite"></span>
+          <span style="font-size:14px;color:#5C5C68">Reading the public profile on Instagram</span>
+        </div>
+        <div style="margin:36px 0 0;border:1px solid #E8E8EC;border-radius:22px;padding:28px">
+          <div style="display:flex;align-items:center;gap:16px">
+            <div style="width:56px;height:56px;border-radius:999px;background:#FAFAFB;flex:none"></div>
+            <div style="flex:1 1 0;display:flex;flex-direction:column;gap:10px">
+              <div style="height:14px;width:46%;border-radius:999px;background:#FAFAFB"></div>
+              <div style="height:12px;width:28%;border-radius:999px;background:#FAFAFB"></div>
+            </div>
+          </div>
+          <div style="display:flex;gap:12px;margin:26px 0 0">
+            <div style="flex:1 1 0;height:64px;border-radius:14px;background:#FAFAFB"></div>
+            <div style="flex:1 1 0;height:64px;border-radius:14px;background:#FAFAFB"></div>
+            <div style="flex:1 1 0;height:64px;border-radius:14px;background:#FAFAFB"></div>
+          </div>
         </div>
       </div>
-      <div class="stats">
-        <div class="stat"><div class="skeleton" style="width:60%;height:19px;margin-bottom:7px"></div><span class="k">Followers</span></div>
-        <div class="stat"><div class="skeleton" style="width:52%;height:19px;margin-bottom:7px"></div><span class="k">Posts</span></div>
-        <div class="stat"><div class="skeleton" style="width:56%;height:19px;margin-bottom:7px"></div><span class="k">Avg. likes</span></div>
-      </div>
     </div>
-  </section>
-
-  <!-- 3 ─ is this you? -->
-  <section class="panel" id="s3">
-    <h1>Is this you?</h1>
-    <p class="lede">Check the account below before we start tracking it.</p>
-    <div id="warnSlot"></div>
-    <div class="card">
-      <div class="who">
-        <div class="avatar" id="av">—</div>
-        <div>
-          <h2 id="name">—</h2>
-          <span class="handle" id="hnd">—</span><span class="badge" id="vbadge" hidden>verified</span>
+    <div data-when="isStep3" hidden>
+      <div style="display:flex;flex-direction:column;gap:0">
+        <div style="font:500 12px/1 'Plus Jakarta Sans',system-ui,sans-serif;color:#9A9AA4">Step 3 of 4</div>
+        <h1 style="margin:18px 0 0;font-size:38px;font-weight:200;line-height:1.1;letter-spacing:-.035em;color:#0F0F14">Is this you?</h1>
+        <p style="margin:14px 0 0;font-size:15px;line-height:1.6;color:#5C5C68;max-width:44ch">You know your own account better than we do. Confirm it and we start keeping a record from today.</p>
+        <div data-when="showWarn" hidden>
+          <div style="display:flex;flex-direction:column;gap:8px;margin:30px 0 0;padding:18px 0 0;border-top:1px solid #E8E8EC">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="width:7px;height:7px;border-radius:999px;background:#8A6100;flex:none"></span>
+              <span style="font-size:12.5px;font-weight:600;color:#8A6100">Worth a check</span>
+            </div>
+            <p style="margin:0;font-size:14px;line-height:1.6;color:#0F0F14;max-width:52ch">This looks like the global account rather than a Sri Lankan one. If you have a local account, use that instead — or carry on if this is the one you post from.</p>
+          </div>
+        </div>
+        <div style="margin:24px 0 0;border:1px solid #E8E8EC;border-radius:22px;padding:28px">
+          <div style="display:flex;align-items:center;gap:16px">
+            <div style="width:56px;height:56px;border-radius:999px;background:rgba(79,70,229,.10);display:grid;place-items:center;font-size:19px;font-weight:600;color:#4F46E5;flex:none">K</div>
+            <div style="flex:1 1 0">
+              <div style="display:flex;align-items:center;gap:8px">
+                <span style="font-size:17px;font-weight:600;letter-spacing:-.01em;color:#0F0F14">Kandos</span>
+                <span title="Verified by the platform" style="display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;border-radius:999px;background:#4F46E5;flex:none"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></span>
+              </div>
+              <div style="margin:4px 0 0;font:400 13.5px 'Plus Jakarta Sans',system-ui,sans-serif;color:#5C5C68">@kandos.lk · Instagram</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:12px;margin:26px 0 0">
+            <div style="flex:1 1 0;border:1px solid #E8E8EC;border-radius:14px;padding:14px 16px">
+              <div style="font:500 12px 'Plus Jakarta Sans',system-ui,sans-serif;color:#9A9AA4">Followers</div>
+              <div style="margin:8px 0 0;font:500 22px 'Plus Jakarta Sans',system-ui,sans-serif;font-variant-numeric:tabular-nums;color:#0F0F14">48,210</div>
+            </div>
+            <div style="flex:1 1 0;border:1px solid #E8E8EC;border-radius:14px;padding:14px 16px">
+              <div style="font:500 12px 'Plus Jakarta Sans',system-ui,sans-serif;color:#9A9AA4">Posts</div>
+              <div style="margin:8px 0 0;font:500 22px 'Plus Jakarta Sans',system-ui,sans-serif;font-variant-numeric:tabular-nums;color:#0F0F14">1,284</div>
+            </div>
+            <div style="flex:1 1 0;border:1px solid #E8E8EC;border-radius:14px;padding:14px 16px">
+              <div style="font:500 12px 'Plus Jakarta Sans',system-ui,sans-serif;color:#9A9AA4">Location</div>
+              <div style="margin:8px 0 0;font-size:15px;font-weight:500;color:#0F0F14">Colombo, LK</div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:14px;margin:28px 0 0">
+          <button class="dcx9" data-action="onConfirm" style="font-family:inherit;font-size:14px;font-weight:600;color:#FFFFFF;background:#4F46E5;border:none;border-radius:14px;padding:14px 26px;cursor:pointer;transition:background 340ms cubic-bezier(0.16,1,0.3,1)">Yes, track this account</button>
+          <button class="dcx10" data-action="onBack1" style="font-family:inherit;font-size:14px;font-weight:600;color:#0F0F14;background:#FFFFFF;border:1px solid #E8E8EC;border-radius:14px;padding:14px 24px;cursor:pointer;transition:border-color 340ms cubic-bezier(0.16,1,0.3,1)">Try another handle</button>
         </div>
       </div>
-      <div class="stats">
-        <div class="stat"><span class="n" id="f">—</span><span class="k">Followers</span></div>
-        <div class="stat"><span class="n" id="pc">—</span><span class="k">Posts</span></div>
-        <div class="stat"><span class="n" id="al">—</span><span class="k">Avg. likes</span></div>
-      </div>
-      <div class="locked">
-        <h3>Connect to unlock</h3>
-        <p>These only exist for the account owner, so they need your permission.</p>
-        <div class="chips"><span class="chip">reach</span><span class="chip">impressions</span><span class="chip">saves</span><span class="chip">profile visits</span></div>
+    </div>
+    <div data-when="isStep4" hidden>
+      <div style="display:flex;flex-direction:column;gap:0">
+        <div style="font:500 12px/1 'Plus Jakarta Sans',system-ui,sans-serif;color:#9A9AA4">Step 4 of 4</div>
+        <h1 style="margin:18px 0 0;font-size:38px;font-weight:200;line-height:1.1;letter-spacing:-.035em;color:#0F0F14">Tracking started.</h1>
+        <p style="margin:14px 0 0;font-size:15px;line-height:1.6;color:#5C5C68;max-width:46ch">We took the first snapshot of @kandos.lk just now. History builds from today — the platforms keep almost none, so this record is yours.</p>
+        <div style="display:flex;gap:12px;margin:32px 0 0">
+          <div style="flex:1 1 0;border:1px solid #E8E8EC;border-radius:18px;padding:20px">
+            <div style="font:500 12px 'Plus Jakarta Sans',system-ui,sans-serif;color:#9A9AA4">First snapshot</div>
+            <div style="margin:10px 0 0;font:500 20px 'Plus Jakarta Sans',system-ui,sans-serif;font-variant-numeric:tabular-nums;color:#0F0F14">48,210</div>
+            <div style="margin:4px 0 0;font-size:13px;color:#5C5C68">followers, today 09:14</div>
+          </div>
+          <div style="flex:1 1 0;border:1px solid #E8E8EC;border-radius:18px;padding:20px">
+            <div style="font:500 12px 'Plus Jakarta Sans',system-ui,sans-serif;color:#9A9AA4">Next snapshot</div>
+            <div style="margin:10px 0 0;font-size:20px;font-weight:300;letter-spacing:-.02em;color:#0F0F14">Tomorrow</div>
+            <div style="margin:4px 0 0;font-size:13px;color:#5C5C68">daily, automatic</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:14px;margin:32px 0 0">
+          <a class="dcx11" href="#1c" style="font-size:14px;font-weight:600;color:#FFFFFF;background:#4F46E5;border-radius:14px;padding:14px 26px;transition:background 340ms cubic-bezier(0.16,1,0.3,1)">Go to the dashboard</a>
+          <button class="dcx12" data-action="onBack1" style="font-family:inherit;font-size:14px;font-weight:600;color:#0F0F14;background:#FFFFFF;border:1px solid #E8E8EC;border-radius:14px;padding:14px 24px;cursor:pointer;transition:border-color 340ms cubic-bezier(0.16,1,0.3,1)">Add another account</button>
+        </div>
       </div>
     </div>
-    <div class="row">
-      <button class="go" id="confirmBtn">Yes, that's us</button>
-      <button class="ghost" id="backBtn">No — try another handle</button>
-    </div>
-  </section>
-
-  <!-- 4 ─ done -->
-  <section class="panel" id="s4">
-    <h1>Tracking started</h1>
-    <p class="lede" id="doneLede">We'll take a snapshot every six hours. Your history starts building from today — the platforms don't keep it, so this is the only way to see months of trend later.</p>
-    <div class="card">
-      <div class="who">
-        <div class="avatar" id="av2">—</div>
-        <div><h2 id="name2">—</h2><span class="handle" id="hnd2">—</span></div>
-      </div>
-      <div class="stats">
-        <div class="stat"><span class="n" id="f2">—</span><span class="k">Followers</span></div>
-        <div class="stat"><span class="n">6h</span><span class="k">Snapshot interval</span></div>
-        <div class="stat"><span class="n">public</span><span class="k">Tier</span></div>
-      </div>
-    </div>
-    <div class="row"><a class="go" href="./dashboard.html" style="text-decoration:none;display:inline-block">Open your dashboard</a><button class="ghost" id="againBtn">Add another account</button></div>
-  </section>
-</div>
-</main>
-
-<dialog id="cfg">
-  <h2>Use the live API</h2>
-  <p>This page runs on sample data by default. To call the real worker, paste the internal key — it stays in this tab only and is never sent anywhere but the API.</p>
-  <label for="apiKey">Internal key</label>
-  <input id="apiKey" type="password" placeholder="x-nova-key" autocomplete="off" style="width:100%;margin-bottom:16px">
-  <label for="apiUrl">Worker URL</label>
-  <input id="apiUrl" placeholder="https://…workers.dev" autocomplete="off" style="width:100%;margin-bottom:20px">
-  <p class="err" id="cfgNote" hidden></p>
-  <p style="font-size:12.5px;color:var(--faint);margin:0 0 16px" id="cfgState"></p>
-  <div class="row"><button class="go" id="cfgSave">Save</button><button class="ghost" id="cfgClear">Use sample data</button></div>
-</dialog>
-
-<script src="./app.js?v=1787579639"></script>
+  </div>
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;padding:15px 24px;border-top:1px solid #E8E8EC">
+    <span style="font-size:12px;color:#9A9AA4">© 2026 Nova Studio · Colombo</span>
+    <span style="font-size:12px;color:#9A9AA4">We read only what the account shows publicly · <a href="#1a" style="color:#5C5C68;text-decoration:none">Privacy</a></span>
+</div></div>
+<script src="./connect.js"></script>
 </body>
 </html>

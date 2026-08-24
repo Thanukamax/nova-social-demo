@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Nova Social</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200..800&family=Space+Grotesk:wght@400..600&display=swap" rel="stylesheet">
+<style>
+/* Carried from the design file unchanged — the prototype's values are the spec. */
+body{margin:0;background:#EDEDF0;font-family:'Plus Jakarta Sans',system-ui,sans-serif}
+a{color:#4F46E5;text-decoration:none}
+a:hover{text-decoration:underline}
+@keyframes novaBreathe{0%,100%{opacity:.25;transform:scale(.85)}50%{opacity:1;transform:scale(1)}}
+.stage{min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:40px 24px 80px}
+.card{background:#FFFFFF;border:1px solid #E8E8EC;border-radius:8px;overflow:hidden;width:420px;max-width:100%}
+[hidden]{display:none!important}
+/* style-hover / style-active from the prototype, hoisted to real rules */
+
+@media (prefers-reduced-motion:reduce){*{transition-duration:.01ms!important;animation-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<div class="stage"><div class="card">
+
+  <div style="background:#4F46E5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:56px 0">
+    <svg width="46" height="46" viewBox="0 0 24 24" fill="none"><path d="M21.6 3 4.4 10.8l6.3 2.1 2.1 6.3L21.6 3Z" fill="#FFFFFF"></path><path d="M21.6 3 10.7 12.9" stroke="#4F46E5" stroke-width="1.25" stroke-linecap="round"></path><path d="M2.4 15.6h4M4.6 18.9h2.6" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" opacity=".72"></path></svg>
+    <div style="display:flex;align-items:baseline;gap:10px">
+      <span style="font-size:38px;font-weight:700;letter-spacing:-.03em;color:#FFFFFF;line-height:1">nova</span>
+      <span style="font-family:'Space Grotesk',system-ui,sans-serif;font-size:34px;font-weight:500;letter-spacing:-.03em;color:rgba(255,255,255,.9);line-height:1">Social</span>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:24px 28px;border-bottom:1px solid #E8E8EC">
+    <div style="display:flex;align-items:center;gap:10px">
+      <span style="width:24px;height:24px;border-radius:7px;background:#4F46E5;display:grid;place-items:center;flex:none"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M21.6 3 4.4 10.8l6.3 2.1 2.1 6.3L21.6 3Z" fill="#FFFFFF"></path><path d="M21.6 3 10.7 12.9" stroke="#4F46E5" stroke-width="1.25" stroke-linecap="round"></path><path d="M2.4 15.6h4M4.6 18.9h2.6" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" opacity=".72"></path></svg></span>
+      <span style="font-size:16px;font-weight:700;letter-spacing:-.02em;color:#0F0F14">nova</span>
+      <span style="font-family:'Space Grotesk',system-ui,sans-serif;font-size:16px;font-weight:500;letter-spacing:-.02em;color:#4F46E5">Social</span>
+    </div>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M21.6 3 4.4 10.8l6.3 2.1 2.1 6.3L21.6 3Z" fill="#0F0F14"></path><path d="M21.6 3 10.7 12.9" stroke="#FFFFFF" stroke-width="1.25" stroke-linecap="round"></path><path d="M2.4 15.6h4M4.6 18.9h2.6" stroke="#0F0F14" stroke-width="1.5" stroke-linecap="round" opacity=".72"></path></svg>
+  </div>
+  <p style="margin:0;padding:20px 28px 24px;font-size:12.5px;line-height:1.65;color:#5C5C68">A paper plane already thrown, with the draught still behind it: the post is out, and this is where you watch it travel. "Social" is set in Space Grotesk against Jakarta's "nova" — one borrowed letterform is the whole flourish, no second hue. App tile for headers and sign-in, inline for the bar, bare dart for the favicon.</p>
+</div></div>
+
+</body>
+</html>
