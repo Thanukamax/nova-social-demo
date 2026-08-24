@@ -23,26 +23,68 @@ function renderHeader(brand, handle) {
   $('av').textContent = initials(brand);
 }
 
+const PLATFORM_LABEL = { instagram: 'Instagram', tiktok: 'TikTok', youtube: 'YouTube' };
+let VIEW = { platform: null, accounts: [], posts: [], snapshotSeries: [], readAt: null };
+
+function renderTabs() {
+  const platforms = VIEW.accounts.map((a) => a.platform);
+  $('tabs').innerHTML = platforms.map((p) => `
+    <button class="tab" role="tab" data-p="${p}" aria-selected="${p === VIEW.platform}">
+      ${PLATFORM_LABEL[p] || p}
+    </button>`).join('');
+  document.querySelectorAll('.tab').forEach((b) =>
+    b.addEventListener('click', () => { VIEW.platform = b.dataset.p; paint(); }));
+}
+
 /**
- * Tiles carry the summary. Each platform gets its own tile with its name
- * written on it — identity is the label, not a colour, so no second hue has to
- * be invented alongside Nova's single accent.
+ * A follower delta is only honest if two snapshots are far enough apart to
+ * mean something. The design says "+124 since yesterday"; with snapshots taken
+ * minutes apart the truthful line is how long ago the previous one was, so the
+ * label is derived from the real gap rather than asserting a day passed.
  */
-function renderTiles(accounts) {
-  const total = accounts.reduce((a, x) => a + (x.followers || 0), 0);
-  const tiles = [
-    `<div class="tile"><span class="lbl">Total following</span>
-       <span class="val">${fmt(total)}</span>
-       <div class="cap">across ${accounts.length} connected account${accounts.length === 1 ? '' : 's'}</div></div>`,
-    ...accounts.map((a) => `
-      <div class="tile"><span class="lbl">${a.platform}</span>
-        <span class="val">${fmt(a.followers)}</span>
-        <div class="cap">${fmt(a.mediaCount)} posts &nbsp;<span class="chip ok">public tier</span></div></div>`),
-    `<div class="tile"><span class="lbl">Next snapshot</span>
-       <span class="val">6h</span>
-       <div class="cap">history builds from today &nbsp;<span class="chip pending">day 1</span></div></div>`,
-  ];
-  $('tiles').innerHTML = tiles.join('');
+function followerDelta(series) {
+  if (series.length < 2) return 'first snapshot — changes appear from the next one';
+  const [newest, previous] = series;
+  if (newest.followers == null || previous.followers == null) return '';
+
+  const diff = newest.followers - previous.followers;
+  const hours = Math.round(
+    (new Date(newest.capturedAt) - new Date(previous.capturedAt)) / 3_600_000);
+  const when = hours >= 20 ? 'since yesterday' : hours >= 1 ? `in the last ${hours}h` : 'since the last snapshot';
+
+  if (diff === 0) return `no change ${when}`;
+  return `${diff > 0 ? '+' : ''}${fmt(diff)} ${when}`;
+}
+
+/**
+ * Four tiles, each a figure plus the context that makes it mean something. A
+ * follower count with nothing beside it is a number; with a delta and a
+ * denominator it is an answer.
+ */
+function renderTiles(account, posts, series) {
+  const followers = account?.followers ?? null;
+  const videos = posts.filter((p) => (p.mediaType || '').includes('video') || p.mediaType === 'video');
+  const stills = posts.length - videos.length;
+
+  const likeVals = posts.map((p) => p.likes).filter((v) => typeof v === 'number');
+  const avgLikes = likeVals.length ? Math.round(likeVals.reduce((a, b) => a + b, 0) / likeVals.length) : null;
+
+  const engaged = posts.reduce((a, p) => a + (p.likes || 0) + (p.comments || 0), 0);
+  const rate = followers && posts.length
+    ? ((engaged / posts.length / followers) * 100).toFixed(1) + '%'
+    : '—';
+
+  const tile = (label, value, note) =>
+    `<div class="tile"><span class="lbl">${label}</span><span class="val">${value}</span>
+       <div class="cap">${note}</div></div>`;
+
+  $('tiles').innerHTML = [
+    tile('Followers', fmt(followers), followerDelta(series)),
+    tile('Posts on record', fmt(posts.length),
+         posts.length ? `${videos.length} video, ${stills} still` : 'none captured yet'),
+    tile('Avg likes', fmt(avgLikes), posts.length ? `per post, last ${posts.length}` : '—'),
+    tile('Engagement', rate, 'likes + comments / followers'),
+  ].join('');
 }
 
 /**
@@ -54,22 +96,27 @@ let LAST_POSTS = [];
 
 function renderPosts(posts) {
   LAST_POSTS = posts;
-  const ranked = [...posts].sort((a, b) => (b.views ?? b.likes ?? 0) - (a.views ?? a.likes ?? 0)).slice(0, 8);
-  const peak = Math.max(...ranked.map((p) => p.views ?? p.likes ?? 0), 1);
+  // Ranked and scaled by likes: the design's column is "Likes vs best", and
+  // likes are the one figure every platform reports the same way.
+  const ranked = [...posts].sort((a, b) => (b.likes ?? 0) - (a.likes ?? 0)).slice(0, 8);
+  const peak = Math.max(...ranked.map((p) => p.likes ?? 0), 1);
 
   $('rows').innerHTML = ranked.map((p) => {
-    const v = p.views ?? 0;
-    const pct = Math.max(2, Math.round((v / peak) * 100));
-    const caption = (p.caption || '—').replace(/</g, '&lt;');
-    const link = p.permalink
-      ? `<a href="${p.permalink}" target="_blank" rel="noopener noreferrer">${caption}</a>`
-      : caption;
+    const likes = p.likes ?? 0;
+    const pct = Math.max(2, Math.round((likes / peak) * 100));
+    const caption = (p.caption || 'Untitled post').replace(/</g, '&lt;');
+    const followers = (VIEW.accounts.find((a) => a.platform === p.platform) || {}).followers || 0;
+    const rate = followers ? (((likes + (p.comments || 0)) / followers) * 100).toFixed(2) + '%' : '—';
+    const when = p.publishedAt
+      ? new Date(p.publishedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+      : '';
+    const meta = [p.mediaType, when, p.views ? `${fmt(p.views)} views` : null].filter(Boolean).join(' · ');
+
     return `<tr data-post="${encodeURIComponent(JSON.stringify(p))}">
-      <td class="plat">${p.platform}</td>
-      <td class="cap" title="${caption.replace(/"/g, '&quot;')}">${caption}</td>
-      <td><div class="bar" title="${fmt(v)} views"><i style="width:${pct}%"></i><em>${fmt(v)}</em></div></td>
-      <td class="num">${fmt(p.likes)}</td>
+      <td><span class="ptitle">${caption.slice(0, 74)}</span><div class="pmeta">${meta}</div></td>
+      <td><div class="bar" title="${fmt(likes)} likes"><i style="width:${pct}%"></i><em>${fmt(likes)}</em></div></td>
       <td class="num">${fmt(p.comments)}</td>
+      <td class="num">${rate}</td>
     </tr>`;
   }).join('');
 
@@ -272,13 +319,57 @@ async function ask(question) {
   }
 }
 
+function paint() {
+  const account = VIEW.accounts.find((a) => a.platform === VIEW.platform);
+  const posts = VIEW.posts.filter((p) => p.platform === VIEW.platform);
+  const series = VIEW.snapshotSeries.filter((a) => a.platform === VIEW.platform);
+
+  renderTabs();
+  $('h1').textContent = `${window.NOVA_SAMPLE.brand} on ${PLATFORM_LABEL[VIEW.platform] || VIEW.platform}`;
+
+  const read = VIEW.readAt
+    ? new Date(VIEW.readAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+    : null;
+  const n = series.length;
+  $('freshness').textContent =
+    `Public figures${read ? `, read today at ${read}` : ''}. ${n} snapshot${n === 1 ? '' : 's'} on record.`;
+
+  renderTiles(account, posts, series);
+  renderPosts(posts);
+
+  // The trend headline states the record rather than drawing one. Two captures
+  // minutes apart is not a line, and a chart drawn from them would invent a
+  // shape the data does not have.
+  $('snapshotLine').textContent = n >= 8
+    ? 'Enough record to chart.'
+    : `${n} snapshot${n === 1 ? '' : 's'} so far — not yet a line.`;
+  $('trendWhy').textContent =
+    `${PLATFORM_LABEL[VIEW.platform] || 'The platform'} keeps no long history of its own, so a line drawn now would invent a shape. The chart appears once there is enough record to be true.`;
+
+  $('postsScope').textContent = posts.length
+    ? `Last 30 days, public figures · ${posts.length} on record`
+    : 'Nothing captured yet';
+  $('lockedWhy').textContent =
+    `Reach, impressions and saves are never rendered publicly by ${PLATFORM_LABEL[VIEW.platform] || 'the platform'}, so no one can read them from outside — including us. Connect the account and Nova records them alongside the rest.`;
+}
+
 async function load() {
   const sample = window.NOVA_SAMPLE;
   renderHeader(sample.brand, sample.handle);
 
+  const seed = (accounts, posts, series, readAt) => {
+    VIEW.accounts = accounts;
+    VIEW.posts = posts;
+    VIEW.snapshotSeries = series;
+    VIEW.readAt = readAt;
+    VIEW.platform = accounts[0]?.platform ?? 'instagram';
+    paint();
+  };
+
   if (!live) {
-    renderTiles(sample.accounts);
-    renderPosts(sample.posts);
+    seed(sample.accounts, sample.posts,
+         sample.accounts.map((a) => ({ ...a, capturedAt: new Date().toISOString() })),
+         new Date().toISOString());
     bubble('it', `Hello — I'm NuNu. I can answer questions about ${sample.brand}'s own accounts.`);
     return;
   }
@@ -297,18 +388,19 @@ async function load() {
     const seen = new Set();
     const posts = d.posts.filter((p) => !seen.has(p.postId) && seen.add(p.postId));
 
-    renderTiles([...byPlatform.values()]);
-    renderPosts(posts.length ? posts : sample.posts);
-    $('sub').textContent = `Public metrics for ${brandId}, refreshed every six hours.`;
+    seed([...byPlatform.values()], posts.length ? posts : sample.posts,
+         d.accounts, d.accounts[0]?.capturedAt ?? null);
   } catch (err) {
-    renderTiles(sample.accounts);
-    renderPosts(sample.posts);
+    seed(sample.accounts, sample.posts,
+         sample.accounts.map((a) => ({ ...a, capturedAt: new Date().toISOString() })),
+         new Date().toISOString());
     $('mode').textContent = `Live API unreachable (${err.message}) — showing captured data.`;
   }
   bubble('it', `Hello — I'm NuNu. I can answer questions about ${sample.brand}'s own accounts.`);
 }
 
 $('postClose').addEventListener('click', () => $('post').close());
+$('connectMore').addEventListener('click', () => { window.location.href = './'; });
 
 document.querySelectorAll('.suggest button').forEach((b) =>
   b.addEventListener('click', () => ask(b.dataset.q)));

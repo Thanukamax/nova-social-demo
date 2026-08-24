@@ -31,6 +31,36 @@ header{display:flex;align-items:center;justify-content:space-between;padding:26p
 .who b{font-size:14.5px;font-weight:500}
 .who span{font-family:var(--mono);font-size:12px;color:var(--muted);display:block;line-height:1.3}
 
+
+.tabs{display:flex;gap:6px;margin:30px 0 0}
+.tab{font-family:inherit;font-size:14px;font-weight:500;color:var(--muted);background:none;
+  border:1px solid transparent;border-radius:999px;padding:7px 16px;cursor:pointer;
+  transition:color var(--dur-out) var(--ease),border-color var(--dur-out) var(--ease)}
+.tab:hover{color:var(--ink);transition-duration:var(--dur-in)}
+.tab[aria-selected="true"]{color:var(--ink);border-color:var(--line);background:var(--sunk)}
+.topline{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-top:26px}
+.tierbar{display:flex;gap:8px;align-items:center;padding-bottom:4px}
+.tierchip{border:1px solid rgba(79,70,229,.35);border-radius:5px;padding:5px 11px;
+  font-size:12.5px;font-weight:600;color:var(--accent)}
+.connect{font-family:inherit;font-size:13.5px;font-weight:600;color:var(--ink);background:var(--bg);
+  border:1px solid var(--line);border-radius:999px;padding:7px 16px;cursor:pointer;
+  transition:border-color var(--dur-out) var(--ease)}
+.connect:hover{border-color:var(--ink);transition-duration:var(--dur-in)}
+.connect:active{transform:scale(.97)}
+.trend{margin:20px 0 0;border:1px dashed var(--line);border-radius:18px;padding:30px 32px}
+.trend .lbl{font:500 12px var(--sans);color:var(--faint)}
+.trend .line{margin:12px 0 0;font-size:19px;font-weight:300;letter-spacing:-.02em}
+.trend .why{margin:8px 0 0;font-size:13.5px;line-height:1.6;color:var(--muted);max-width:56ch}
+.secthead{display:flex;align-items:baseline;justify-content:space-between;gap:14px;margin-bottom:14px}
+h2.big{font-family:var(--sans);font-size:22px;font-weight:300;letter-spacing:-.02em;
+  text-transform:none;color:var(--ink);margin:0}
+.quiet{font-size:13px;color:var(--faint)}
+.ptitle{font-size:14.5px;color:var(--ink);text-decoration:none;display:block}
+.pmeta{font-size:12.5px;color:var(--faint);margin-top:2px}
+.lockrows{flex:1;min-width:230px;display:flex;flex-direction:column;gap:2px}
+.lockrows div{display:flex;justify-content:space-between;padding:9px 0;border-top:1px solid var(--line)}
+.lockrows span:first-child{font-size:14px}
+.lockrows span:last-child{font-family:var(--mono);font-size:12px;color:var(--faint)}
 h1{font-size:34px;font-weight:200;letter-spacing:-.035em;margin:38px 0 6px}
 .sub{color:var(--muted);font-size:15.5px;margin:0 0 30px}
 
@@ -126,41 +156,51 @@ a{color:var(--accent)}
   </div>
 </header>
 
-<h1>Your accounts</h1>
-<p class="sub" id="sub">Public metrics, refreshed every six hours.</p>
+<div class="tabs" id="tabs"></div>
+
+<div class="topline">
+  <div>
+    <h1 id="h1">Your account</h1>
+    <p class="sub" id="freshness">—</p>
+  </div>
+  <div class="tierbar">
+    <span class="tierchip" id="tierchip">Public tier</span>
+    <button class="connect" id="connectMore">Connect for more</button>
+  </div>
+</div>
 
 <div class="tiles" id="tiles"></div>
 
-<section>
-  <h2>Follower trend</h2>
-  <div class="empty" id="trend">
-    <p class="big">2 snapshots so far</p>
-    <p>A trend needs history, and the platforms don't keep it — TikTok's own analytics reach back seven days. Yours starts accumulating from today, so this fills in over the coming weeks.</p>
-  </div>
-</section>
+<div class="trend">
+  <span class="lbl">Follower trend</span>
+  <p class="line" id="snapshotLine">—</p>
+  <p class="why" id="trendWhy"></p>
+</div>
 
 <section>
-  <h2>Top posts by views</h2>
+  <div class="secthead">
+    <h2 class="big">Top posts</h2>
+    <span class="quiet" id="postsScope">Last 30 days, public figures</span>
+  </div>
   <div class="tw"><table>
     <thead><tr>
-      <th>Platform</th><th>Post</th><th class="num">Views</th>
-      <th class="num">Likes</th><th class="num">Comments</th>
+      <th>Post</th><th class="num">Likes vs best</th>
+      <th class="num">Comments</th><th class="num">Engagement</th>
     </tr></thead>
     <tbody id="rows"></tbody>
   </table></div>
 </section>
 
 <section>
-  <h2>Not available on this tier</h2>
   <div class="locked">
     <div>
-      <h3>Connect the account to unlock</h3>
-      <p>These figures only exist for the account owner, so the platform will not show them to anyone else. Connecting proves ownership and unlocks them.</p>
-      <div class="chips"><span>reach</span><span>impressions</span><span>profile visits</span><span>saves &middot; Instagram</span></div>
+      <h3>Only you can see these</h3>
+      <p id="lockedWhy">Reach, impressions and saves are never rendered publicly, so no one can read them from outside — including us. Connect the account and Nova records them alongside the rest.</p>
     </div>
-    <div>
-      <h3>Why they're missing</h3>
-      <p>Nothing here is scraped. Public counts come from official platform interfaces; the private ones are simply not rendered anywhere a visitor can see.</p>
+    <div class="lockrows">
+      <div><span>Reach</span><span>not public</span></div>
+      <div><span>Impressions</span><span>not public</span></div>
+      <div><span>Saves</span><span>not public</span></div>
     </div>
   </div>
 </section>
@@ -193,7 +233,7 @@ a{color:var(--accent)}
   <div id="postBody"></div>
 </dialog>
 </div>
-<script src="./sample-data.js?v=1787579253"></script>
-<script src="./dashboard.js?v=1787579253"></script>
+<script src="./sample-data.js?v=1787579639"></script>
+<script src="./dashboard.js?v=1787579639"></script>
 </body>
 </html>
