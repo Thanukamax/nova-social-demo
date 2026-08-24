@@ -1,2 +1,8 @@
 node_modules/
 .DS_Store
+
+# Stale Cloudflare Pages build output. This site is published by GitHub Pages
+# from main/root, so .cf-dist is never served — committing it only ships a
+# second, older copy of every page.
+.cf-dist/
+.wrangler/
