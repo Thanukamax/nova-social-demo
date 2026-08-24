@@ -45,6 +45,23 @@ function cleanKey(raw) {
     .trim();
 }
 
+/**
+ * A URL pasted without a scheme is the quiet killer: `fetch` treats it as a
+ * relative path, so the request goes to this GitHub Pages origin instead of the
+ * worker and comes back as a 404 that looks like the API is broken.
+ */
+function cleanUrl(raw) {
+  let v = String(raw || '').trim().replace(/\/+$/, '');
+  if (!v) return '';
+  if (!/^https?:\/\//i.test(v)) v = `https://${v}`;
+  try {
+    const u = new URL(v);
+    return `${u.protocol}//${u.host}`;
+  } catch {
+    return '';
+  }
+}
+
 /** The worker's key is 64 hex characters. Anything else is a bad paste. */
 function keyLooksRight(k) {
   return /^[0-9a-f]{64}$/i.test(k);
@@ -233,21 +250,31 @@ $('modeBtn').addEventListener('click', () => {
     : 'No key saved — running on sample data.';
   $('cfg').showModal();
 });
-$('cfgSave').addEventListener('click', () => {
+$('cfgSave').addEventListener('click', async () => {
   const key = cleanKey($('apiKey').value);
-  const url = $('apiUrl').value.trim().replace(/\/$/, '');
+  const url = cleanUrl($('apiUrl').value);
   const note = $('cfgNote');
+  const say = (msg) => { note.textContent = msg; note.hidden = false; };
 
-  if (!key || !url) {
-    note.textContent = 'Both the key and the worker URL are needed.';
-    note.hidden = false;
-    return;
-  }
+  if (!key || !url) return say('Both the key and the worker URL are needed.');
   if (!keyLooksRight(key)) {
     // Caught here rather than as a 401 three screens later.
-    note.textContent = `That key is ${key.length} characters; the worker's is 64 hex. Copy everything after "SOCIAL_WORKER_KEY=".`;
-    note.hidden = false;
-    return;
+    return say(`That key is ${key.length} characters; the worker's is 64 hex. Copy everything after "SOCIAL_WORKER_KEY=".`);
+  }
+
+  // Verified before saving. Storing settings that do not work and discovering
+  // it two screens later is what made this feel like the site was broken.
+  say('Checking the connection…');
+  const btn = $('cfgSave');
+  btn.disabled = true;
+  try {
+    const res = await fetch(`${url}/api/v1/brands/demo/connections`, { headers: { 'x-nova-key': key } });
+    if (res.status === 401) return say('The worker rejected that key. Check you copied all 64 characters.');
+    if (!res.ok) return say(`The worker answered ${res.status} at ${url}. Check the URL.`);
+  } catch (err) {
+    return say(`Could not reach ${url} — ${err.message}. Check the URL is the worker, not this site.`);
+  } finally {
+    btn.disabled = false;
   }
 
   note.hidden = true;
