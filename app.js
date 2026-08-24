@@ -1,0 +1,197 @@
+/**
+ * Brand onboarding demo.
+ *
+ * Runs on sample data by default. GitHub Pages is public and static, so the
+ * worker's internal key cannot live in this file — if you want the real API,
+ * paste the key at runtime and it stays in this tab's sessionStorage.
+ *
+ * The sample figures are real, captured from the live vendor on 2026-08-24, so
+ * the demo shows what a brand would actually see rather than invented numbers.
+ */
+const $ = (id) => document.getElementById(id);
+const CFG_KEY = 'nova.demo.cfg';
+
+const SAMPLES = {
+  'instagram:daraz.lk': { displayName: 'Daraz Sri Lanka', handle: 'daraz.lk', verified: true,
+    followers: 148062, posts: 1240, avgLikes: 708 },
+  'instagram:kapruka': { displayName: 'Kapruka', handle: 'kapruka', verified: false,
+    followers: 33987, posts: 890, avgLikes: 34 },
+  'tiktok:kapruka': { displayName: 'Kapruka', handle: 'kapruka', verified: false,
+    followers: 35400, posts: 135, avgLikes: 167 },
+  'tiktok:daraz.lk': { displayName: 'Daraz Sri Lanka', handle: 'daraz.lk', verified: false,
+    followers: 69100, posts: 467, avgLikes: 19 },
+  // The trap this flow exists to catch: a brand entering the worldwide handle.
+  'instagram:pizzahut': { displayName: 'Pizza Hut', handle: 'pizzahut', verified: true,
+    followers: 1784972, posts: 3100, avgLikes: 1200, global: true },
+  'instagram:baskinrobbins': { displayName: 'Baskin-Robbins', handle: 'baskinrobbins', verified: true,
+    followers: 807322, posts: 2400, avgLikes: 900, global: true },
+};
+
+let state = { platform: 'instagram', account: null, step: 1 };
+let cfg = readCfg();
+
+function readCfg() {
+  try { return JSON.parse(sessionStorage.getItem(CFG_KEY) || '{}'); } catch { return {}; }
+}
+function writeCfg(next) {
+  cfg = next;
+  try { sessionStorage.setItem(CFG_KEY, JSON.stringify(next)); } catch { /* private mode */ }
+  paintMode();
+}
+function live() { return Boolean(cfg.key && cfg.url); }
+function paintMode() { $('modeBtn').textContent = live() ? 'live API' : 'sample data'; }
+
+/** Strip what people actually paste: @ prefixes, full URLs, query strings. */
+function normalize(input) {
+  let v = String(input || '').trim();
+  const m = v.match(/(?:instagram\.com|tiktok\.com|youtube\.com)\/@?([A-Za-z0-9._-]+)/i);
+  if (m) v = m[1];
+  return v.replace(/^@+/, '').replace(/[/?#].*$/, '').toLowerCase();
+}
+
+const fmt = (n) => (typeof n === 'number' ? n.toLocaleString('en-US') : '—');
+const initials = (name) => (name || '?').replace(/[^A-Za-z ]/g, '').split(' ')
+  .filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join('') || '?';
+
+/**
+ * Move between steps.
+ *
+ * The outgoing panel gets the shorter duration and the incoming one the longer:
+ * a screen should arrive deliberately and leave without ceremony. The timeout
+ * matches --dur-out so the two never overlap into a flicker.
+ */
+function goTo(n) {
+  const from = $(`s${state.step}`);
+  const to = $(`s${n}`);
+  if (from === to) return;
+
+  from.classList.add('leaving');
+  from.classList.remove('live');
+  setTimeout(() => from.classList.remove('leaving'), 340);
+  to.classList.add('live');
+
+  state.step = n;
+  ['p1', 'p2', 'p3'].forEach((id, i) => $(id).classList.toggle('on', i < Math.min(n, 3)));
+  to.querySelector('h1')?.setAttribute('tabindex', '-1');
+  to.querySelector('h1')?.focus?.();
+}
+
+async function lookupLive(platform, handle) {
+  const res = await fetch(`${cfg.url}/api/v1/brands/demo/verify-handle`, {
+    method: 'POST',
+    headers: { 'x-nova-key': cfg.key, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ platform, handle, companyName: handle }),
+  });
+  if (res.status === 429) throw new Error('Too many lookups just now — wait a minute and try again.');
+  if (!res.ok) throw new Error(`The API returned ${res.status}.`);
+  const body = await res.json();
+  if (!body.found) return null;
+  return {
+    displayName: body.account.displayName || handle,
+    handle: body.account.handle,
+    verified: Boolean(body.account.verified),
+    followers: body.account.followers,
+    posts: null,
+    avgLikes: null,
+    warning: body.account.warning,
+  };
+}
+
+async function lookupSample(platform, handle) {
+  // A deliberate delay: the real call takes seconds, and a demo that answers
+  // instantly would hide the one state most likely to feel broken in production.
+  await new Promise((r) => setTimeout(r, 1400));
+  const hit = SAMPLES[`${platform}:${handle}`];
+  if (!hit) return null;
+  return {
+    ...hit,
+    warning: hit.global
+      ? `This looks like the global ${hit.displayName} account rather than a Sri Lankan one. If you have a local account, use that instead.`
+      : null,
+  };
+}
+
+async function verify() {
+  const handle = normalize($('handle').value);
+  $('err1').hidden = true;
+  if (!handle) {
+    $('err1').textContent = 'Enter a handle first.';
+    $('err1').hidden = false;
+    return;
+  }
+
+  goTo(2);
+  $('waitMsg').textContent = live() ? 'Contacting the platform…' : 'Contacting the platform…';
+
+  try {
+    const account = live()
+      ? await lookupLive(state.platform, handle)
+      : await lookupSample(state.platform, handle);
+
+    if (!account) {
+      goTo(1);
+      $('err1').textContent = `We couldn't find @${handle} on ${state.platform}. Check the spelling, or paste the profile link.`;
+      $('err1').hidden = false;
+      return;
+    }
+
+    state.account = account;
+    paintAccount(account);
+    goTo(3);
+  } catch (err) {
+    goTo(1);
+    $('err1').textContent = err.message || 'Something went wrong. Try again.';
+    $('err1').hidden = false;
+  }
+}
+
+function paintAccount(a) {
+  $('av').textContent = initials(a.displayName);
+  $('name').textContent = a.displayName;
+  $('hnd').textContent = `@${a.handle}`;
+  $('vbadge').hidden = !a.verified;
+  $('f').textContent = fmt(a.followers);
+  $('pc').textContent = fmt(a.posts);
+  $('al').textContent = fmt(a.avgLikes);
+
+  // The warning is advice, not a block — a brand may know something we do not.
+  $('warnSlot').innerHTML = a.warning
+    ? `<div class="warn"><b>Check this one.</b> ${a.warning}</div>`
+    : '';
+}
+
+function confirm() {
+  const a = state.account;
+  $('av2').textContent = initials(a.displayName);
+  $('name2').textContent = a.displayName;
+  $('hnd2').textContent = `@${a.handle}`;
+  $('f2').textContent = fmt(a.followers);
+  goTo(4);
+}
+
+document.querySelectorAll('.plat').forEach((b) => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('.plat').forEach((o) => o.setAttribute('aria-pressed', String(o === b)));
+    state.platform = b.dataset.plat;
+    $('handle').placeholder = state.platform === 'youtube' ? 'novadrop' : 'daraz.lk';
+  });
+});
+
+$('verifyBtn').addEventListener('click', verify);
+$('handle').addEventListener('keydown', (e) => { if (e.key === 'Enter') verify(); });
+$('confirmBtn').addEventListener('click', confirm);
+$('backBtn').addEventListener('click', () => goTo(1));
+$('againBtn').addEventListener('click', () => { $('handle').value = ''; goTo(1); });
+
+$('modeBtn').addEventListener('click', () => {
+  $('apiKey').value = cfg.key || '';
+  $('apiUrl').value = cfg.url || '';
+  $('cfg').showModal();
+});
+$('cfgSave').addEventListener('click', () => {
+  writeCfg({ key: $('apiKey').value.trim(), url: $('apiUrl').value.trim().replace(/\/$/, '') });
+  $('cfg').close();
+});
+$('cfgClear').addEventListener('click', () => { writeCfg({}); $('cfg').close(); });
+
+paintMode();
