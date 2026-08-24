@@ -104,6 +104,10 @@ async function ask(question) {
       body: JSON.stringify({ companyName: window.NOVA_SAMPLE.brand, messages: history }),
     });
 
+    if (res.status === 401) {
+      pending.textContent = 'The API rejected the saved key. Open the start page, click the header menu, and re-paste it — 64 hex characters, no prefix.';
+      return;
+    }
     if (res.status === 429) {
       pending.textContent = 'That is more questions than the rate limit allows. Try again in a minute.';
       return;

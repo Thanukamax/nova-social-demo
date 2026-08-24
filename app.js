@@ -30,6 +30,24 @@ const SAMPLES = {
 let state = { platform: 'instagram', account: null, step: 1 };
 let cfg = readCfg();
 
+/**
+ * Keys arrive pasted from a terminal, so they often carry the variable name,
+ * quotes, or a trailing newline. Stripping those is cheaper than making someone
+ * work out why a correct-looking key returns 401.
+ */
+function cleanKey(raw) {
+  return String(raw || '')
+    .trim()
+    .replace(/^[A-Z_]*KEY\s*=\s*/i, '')
+    .replace(/^["']|["']$/g, '')
+    .trim();
+}
+
+/** The worker's key is 64 hex characters. Anything else is a bad paste. */
+function keyLooksRight(k) {
+  return /^[0-9a-f]{64}$/i.test(k);
+}
+
 function readCfg() {
   try { return JSON.parse(sessionStorage.getItem(CFG_KEY) || '{}'); } catch { return {}; }
 }
@@ -82,6 +100,9 @@ async function lookupLive(platform, handle) {
     headers: { 'x-nova-key': cfg.key, 'Content-Type': 'application/json' },
     body: JSON.stringify({ platform, handle, companyName: handle }),
   });
+  if (res.status === 401) {
+    throw new Error('The API rejected that key. Open the header menu and re-paste it — it should be 64 hex characters with no prefix.');
+  }
   if (res.status === 429) throw new Error('Too many lookups just now — wait a minute and try again.');
   if (!res.ok) throw new Error(`The API returned ${res.status}.`);
   const body = await res.json();
@@ -186,10 +207,31 @@ $('againBtn').addEventListener('click', () => { $('handle').value = ''; goTo(1);
 $('modeBtn').addEventListener('click', () => {
   $('apiKey').value = cfg.key || '';
   $('apiUrl').value = cfg.url || '';
+  $('cfgNote').hidden = true;
+  $('cfgState').textContent = cfg.key
+    ? `Saved: a ${cfg.key.length}-character key${keyLooksRight(cfg.key) ? '' : ' — that is not the expected 64 hex'}.`
+    : 'No key saved — running on sample data.';
   $('cfg').showModal();
 });
 $('cfgSave').addEventListener('click', () => {
-  writeCfg({ key: $('apiKey').value.trim(), url: $('apiUrl').value.trim().replace(/\/$/, '') });
+  const key = cleanKey($('apiKey').value);
+  const url = $('apiUrl').value.trim().replace(/\/$/, '');
+  const note = $('cfgNote');
+
+  if (!key || !url) {
+    note.textContent = 'Both the key and the worker URL are needed.';
+    note.hidden = false;
+    return;
+  }
+  if (!keyLooksRight(key)) {
+    // Caught here rather than as a 401 three screens later.
+    note.textContent = `That key is ${key.length} characters; the worker's is 64 hex. Copy everything after "SOCIAL_WORKER_KEY=".`;
+    note.hidden = false;
+    return;
+  }
+
+  note.hidden = true;
+  writeCfg({ key, url });
   $('cfg').close();
 });
 $('cfgClear').addEventListener('click', () => { writeCfg({}); $('cfg').close(); });

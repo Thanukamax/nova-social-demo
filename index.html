@@ -251,6 +251,8 @@ dialog p{font-size:14px;color:var(--muted);margin:0 0 18px}
   <input id="apiKey" type="password" placeholder="x-nova-key" autocomplete="off" style="width:100%;margin-bottom:16px">
   <label for="apiUrl">Worker URL</label>
   <input id="apiUrl" placeholder="https://…workers.dev" autocomplete="off" style="width:100%;margin-bottom:20px">
+  <p class="err" id="cfgNote" hidden></p>
+  <p style="font-size:12.5px;color:var(--faint);margin:0 0 16px" id="cfgState"></p>
   <div class="row"><button class="go" id="cfgSave">Save</button><button class="ghost" id="cfgClear">Use sample data</button></div>
 </dialog>
 
