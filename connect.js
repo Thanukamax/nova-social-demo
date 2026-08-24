@@ -49,11 +49,32 @@ const actions = {
   pickYouTube:   () => { state.platform = 'YouTube';   paint(); },
   onBack1:  () => go(1),
   onConfirm: () => go(4),
+  goDashboard: () => { window.location.href = './dashboard.html'; },
   onLookup: () => {
     // The pause is the design's: a real lookup takes seconds, and a step that
     // resolves instantly hides the one state most likely to feel broken.
     go(2);
     clearTimeout(lookupTimer);
+
+    // Live when a key is present: a real lookup replaces the design's timed
+    // pause, and the step advances when the worker actually answers.
+    if (typeof NOVA !== 'undefined' && NOVA.live()) {
+      NOVA.call(`/api/v1/brands/${NOVA.brandId}/verify-handle`, {
+        method: 'POST',
+        body: JSON.stringify({
+          platform: state.platform.toLowerCase(),
+          handle: state.handle,
+          companyName: state.handle,
+        }),
+      })
+        .then((d) => {
+          state.warn = Boolean(d.account?.warning);
+          state.found = d.found;
+          go(3);
+        })
+        .catch(() => go(3));
+      return;
+    }
     lookupTimer = setTimeout(() => go(3), 1600);
   },
 };

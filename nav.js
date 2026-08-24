@@ -1,8 +1,7 @@
-/** Sign in and Request access are static in the design; only the links move. */
+/** Cross-page navigation for the buttons the design already draws. */
 document.addEventListener('click', (e) => {
-  const el = e.target.closest('[data-action]');
+  const el = e.target.closest('[data-go]');
   if (!el) return;
   e.preventDefault();
-  const to = { onSignIn: './dashboard.html', onRequest: './request.html' }[el.dataset.action];
-  if (to) window.location.href = to;
+  window.location.href = el.dataset.go;
 });
