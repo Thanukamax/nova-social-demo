@@ -102,62 +102,74 @@ dialog?.addEventListener('click', (e) => { if (e.target === dialog) dialog.close
 
 const input = q('#nunuInput');
 const send = q('#nunuSend');
-const transcript = input?.closest('div')?.parentElement?.querySelector('div');
-const log = (() => {
-  // The design's transcript is the block holding the seeded exchanges.
-  const seeded = qa('div').find((d) => /Did the Avurudu reel/.test(d.textContent) && d.children.length >= 2);
-  return seeded || transcript;
-})();
 
-const history = [];
-const MINE_STYLE = 'align-self:flex-end;max-width:82%;background:#4F46E5;color:#FFFFFF;border-radius:14px;padding:11px 15px;font-size:14px;line-height:1.55';
-const ITS_STYLE = 'display:flex;gap:10px;align-items:flex-start;max-width:92%';
+/**
+ * The transcript and its two bubble shapes are found by anchoring on the
+ * design's own seeded exchange, then cloned for every live message.
+ *
+ * The first attempt searched for any div containing the seeded question, which
+ * matched the outermost wrapper — so replies were appended to the page instead
+ * of the panel and rendered full-width across the bottom. Anchoring on the
+ * text node and walking up one level finds the actual transcript, and cloning
+ * the existing bubbles means a live reply is styled identically to the mocked
+ * one without restating any of the design's values here.
+ */
+const SEED_Q = 'Did the Avurudu reel do better than our usual posts?';
+
+const seedUser = qa('div').filter((d) => d.textContent.trim() === SEED_Q).pop() || null;
+const log = seedUser?.parentElement || null;
+const seedBot = seedUser?.nextElementSibling || null;
 
 function bubble(role, text) {
   if (!log) return null;
-  const el = document.createElement('div');
-  if (role === 'me') {
-    el.setAttribute('style', MINE_STYLE);
-    el.textContent = text;
-  } else {
-    el.setAttribute('style', ITS_STYLE);
-    el.innerHTML = `<span style="width:26px;height:26px;border-radius:8px;background:rgba(79,70,229,.10);display:grid;place-items:center;flex:none">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5.4 17.2 11.6 11.4 18.8 6.4" stroke="rgba(79,70,229,.75)" stroke-width="1.9" stroke-linecap="round"></path><circle cx="5.4" cy="17.2" r="2.2" fill="#4F46E5"></circle><circle cx="18.8" cy="6.4" r="2.9" fill="#4F46E5"></circle></svg></span>
-      <div style="font-size:14px;line-height:1.6;color:#0F0F14"></div>`;
-    el.lastElementChild.textContent = text;
-  }
+
+  const template = role === 'me' ? seedUser : seedBot;
+  if (!template) return null;
+
+  const el = template.cloneNode(true);
+  // The assistant bubble wraps its glyph and its text; the text is the last
+  // child. The user bubble is the text node itself.
+  const slot = role === 'me' ? el : el.lastElementChild;
+  slot.textContent = text;
+
   log.appendChild(el);
   log.scrollTop = log.scrollHeight;
-  return el;
+  return { el, slot };
 }
+
+const history = [];
 
 async function ask(question) {
   if (!question.trim()) return;
   bubble('me', question);
   history.push({ role: 'user', content: question });
   if (input) input.value = '';
+
   const pending = bubble('it', 'Thinking…');
+  if (!pending) return;
 
   if (!NOVA.live()) {
-    pending.lastElementChild.textContent =
-      'I run on the live worker. Reload this page with ?key=<worker key> and ask again.';
+    pending.slot.textContent =
+      'I run on the live worker. Reload with ?key=<worker key> and ask again.';
     return;
   }
+
   try {
     const d = await NOVA.call(`/api/v1/brands/${NOVA.brandId}/chat`, {
       method: 'POST',
       body: JSON.stringify({ companyName: D.brand, messages: history }),
     });
-    pending.lastElementChild.textContent = d.content;
+    pending.slot.textContent = d.content;
     history.push({ role: 'assistant', content: d.content });
+
     if (d.toolsUsed?.length || d.refused) {
       const meta = document.createElement('div');
       meta.setAttribute('style', 'margin-top:6px;font-size:11px;color:#9A9AA4');
       meta.textContent = [d.refused ? 'refused' : 'answered', ...(d.toolsUsed || [])].join(' · ');
-      pending.lastElementChild.appendChild(meta);
+      pending.slot.appendChild(meta);
     }
   } catch (err) {
-    pending.lastElementChild.textContent = err.message;
+    pending.slot.textContent = err.message;
   }
 }
 
