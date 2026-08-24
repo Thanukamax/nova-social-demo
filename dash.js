@@ -104,137 +104,68 @@ dialog?.addEventListener('click', (e) => { if (e.target === dialog) dialog.close
  * The design draws a maximise control but ships both of its icon states
  * hidden, so the button rendered as an empty box and did nothing.
  *
- * Expanding lifts the panel out to a fixed overlay rather than resizing it in
- * place: the conversation is the thing you want room for, and growing a column
- * inside a grid just makes the dashboard reflow around it.
+ * Expanding toggles a CLASS rather than rewriting the element's inline style.
+ * The first version saved the original style and wrote it back on close, which
+ * corrupted the panel the moment expand ran twice — the "original" it saved
+ * the second time was the expanded one. A class has nothing to save: removing
+ * it restores the design's own styles exactly.
  */
 const nunuToggle = q('#nunuToggle');
-const nunuPanel = nunuToggle?.closest('div[style*="border"]')?.parentElement
-  || nunuToggle?.closest('div[style*="display:flex"]')?.parentElement;
 
-let nunuFull = false;
+// The panel is the nearest ancestor that holds both the control and the input,
+// which is stable even if the design's wrapper markup changes around it.
+const nunuPanel = (() => {
+  let el = nunuToggle;
+  while (el && el !== document.body) {
+    if (el.querySelector('#nunuInput')) return el;
+    el = el.parentElement;
+  }
+  return null;
+})();
+
+const style = document.createElement('style');
+style.textContent = `
+  .nunu-max{position:fixed!important;inset:3vh 4vw!important;z-index:60!important;
+    max-width:none!important;width:auto!important;background:#FFFFFF!important;
+    border:1px solid #E8E8EC!important;border-radius:18px!important;
+    box-shadow:0 30px 90px rgba(15,15,20,.22)!important;
+    display:flex!important;flex-direction:column!important}
+  .nunu-backdrop{position:fixed;inset:0;background:rgba(15,15,20,.34);z-index:55}
+`;
+document.head.appendChild(style);
+
 let backdrop = null;
 
 function setNunuFull(on) {
   if (!nunuPanel) return;
-  nunuFull = on;
+  if (on === nunuPanel.classList.contains('nunu-max')) return;   // already there
 
+  nunuPanel.classList.toggle('nunu-max', on);
   q('#iconExpand')?.toggleAttribute('hidden', on);
   q('#iconCollapse')?.toggleAttribute('hidden', !on);
 
-  if (on) {
-    nunuPanel.dataset.prevStyle = nunuPanel.getAttribute('style') || '';
-    nunuPanel.setAttribute('style',
-      `${nunuPanel.dataset.prevStyle};position:fixed;inset:3vh 4vw;z-index:60;` +
-      'background:#FFFFFF;border:1px solid #E8E8EC;border-radius:16px;' +
-      'box-shadow:0 30px 90px rgba(15,15,20,.22);display:flex;flex-direction:column;' +
-      'transition:none');
+  backdrop?.remove();
+  backdrop = null;
 
+  if (on) {
     backdrop = document.createElement('div');
-    backdrop.setAttribute('style',
-      'position:fixed;inset:0;background:rgba(15,15,20,.34);z-index:55');
+    backdrop.className = 'nunu-backdrop';
     backdrop.addEventListener('click', () => setNunuFull(false));
     document.body.appendChild(backdrop);
-  } else {
-    nunuPanel.setAttribute('style', nunuPanel.dataset.prevStyle || '');
-    backdrop?.remove();
-    backdrop = null;
   }
 
   // The transcript grows when the panel does; keep the latest message in view.
   if (log) log.scrollTop = log.scrollHeight;
 }
 
-nunuToggle?.addEventListener('click', (e) => { e.preventDefault(); setNunuFull(!nunuFull); });
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && nunuFull) setNunuFull(false); });
+nunuToggle?.addEventListener('click', (e) => {
+  // Without this the click also reaches the document handler below and the
+  // panel closes again in the same tick.
+  e.preventDefault();
+  e.stopPropagation();
+  setNunuFull(!nunuPanel?.classList.contains('nunu-max'));
+});
 
-/* ---- NuNu, live -------------------------------------------------- */
-
-const input = q('#nunuInput');
-const send = q('#nunuSend');
-
-/**
- * The transcript and its two bubble shapes are found by anchoring on the
- * design's own seeded exchange, then cloned for every live message.
- *
- * The first attempt searched for any div containing the seeded question, which
- * matched the outermost wrapper — so replies were appended to the page instead
- * of the panel and rendered full-width across the bottom. Anchoring on the
- * text node and walking up one level finds the actual transcript, and cloning
- * the existing bubbles means a live reply is styled identically to the mocked
- * one without restating any of the design's values here.
- */
-const SEED_Q = 'Did the Avurudu reel do better than our usual posts?';
-
-const seedUser = qa('div').filter((d) => d.textContent.trim() === SEED_Q).pop() || null;
-const log = seedUser?.parentElement || null;
-const seedBot = seedUser?.nextElementSibling || null;
-
-function bubble(role, text) {
-  if (!log) return null;
-
-  const template = role === 'me' ? seedUser : seedBot;
-  if (!template) return null;
-
-  const el = template.cloneNode(true);
-  // The assistant bubble wraps its glyph and its text; the text is the last
-  // child. The user bubble is the text node itself.
-  const slot = role === 'me' ? el : el.lastElementChild;
-  slot.textContent = text;
-
-  log.appendChild(el);
-  log.scrollTop = log.scrollHeight;
-  return { el, slot };
-}
-
-const history = [];
-
-async function ask(question) {
-  if (!question.trim()) return;
-  bubble('me', question);
-  history.push({ role: 'user', content: question });
-  if (input) input.value = '';
-
-  const pending = bubble('it', 'Thinking…');
-  if (!pending) return;
-
-  if (!NOVA.live()) {
-    pending.slot.textContent =
-      'I run on the live worker. Reload with ?key=<worker key> and ask again.';
-    return;
-  }
-
-  try {
-    const d = await NOVA.call(`/api/v1/brands/${NOVA.brandId}/chat`, {
-      method: 'POST',
-      body: JSON.stringify({ companyName: D.brand, messages: history }),
-    });
-    pending.slot.textContent = d.content;
-    history.push({ role: 'assistant', content: d.content });
-
-    if (d.toolsUsed?.length || d.refused) {
-      const meta = document.createElement('div');
-      meta.setAttribute('style', 'margin-top:6px;font-size:11px;color:#9A9AA4');
-      meta.textContent = [d.refused ? 'refused' : 'answered', ...(d.toolsUsed || [])].join(' · ');
-      pending.slot.appendChild(meta);
-    }
-  } catch (err) {
-    pending.slot.textContent = err.message;
-  }
-}
-
-send?.addEventListener('click', () => ask(input.value));
-input?.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); ask(input.value); } });
-qa('button').filter((b) => /Compare to March|What should we post next|Why did comments spike/.test(b.textContent))
-  .forEach((b) => b.addEventListener('click', () => ask(b.textContent.trim())));
-
-/* ---- live figures ------------------------------------------------ */
-
-(async () => {
-  if (!NOVA.live()) return;
-  try {
-    const d = await NOVA.call(`/api/v1/brands/${NOVA.brandId}/metrics?days=30&postLimit=40`);
-    const ig = d.accounts.find((a) => a.platform === 'instagram');
-    if (ig?.followers) q('[data-fill="followers"]').textContent = fmt(ig.followers);
-  } catch { /* captured figures remain */ }
-})();
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && nunuPanel?.classList.contains('nunu-max')) setNunuFull(false);
+});
