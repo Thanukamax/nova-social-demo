@@ -22,10 +22,18 @@ const PLATFORM_TINT = {
  * A handle that does not exist, and a lookup that never answered, both ended
  * with the flow confirming a stranger's account as yours.
  */
+/**
+ * The dashboard's platform buttons link here with #platform=TikTok and the
+ * like. Without this they all landed on Instagram, so three distinct buttons
+ * did the same thing and the one you pressed was ignored.
+ */
+const PLATFORMS = ['Instagram', 'TikTok', 'YouTube'];
+const asked = new URLSearchParams(location.hash.replace(/^#/, '')).get('platform');
+
 const state = {
   step: 1,
   handle: 'kandos.lk',
-  platform: 'Instagram',
+  platform: PLATFORMS.includes(asked) ? asked : 'Instagram',
   warn: false,
   mode: 'sample',       // sample | found | notfound | failed
   account: null,

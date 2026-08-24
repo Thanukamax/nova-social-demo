@@ -342,11 +342,79 @@ function addBubble(who, text) {
   return body;
 }
 
+/**
+ * Answers NuNu can give without the model.
+ *
+ * Every one is computed from the same DARAZ figures the rest of the page
+ * renders, so these are precomputed, not invented: the numbers in the reply
+ * are the numbers in the table above it. That distinction is the whole point.
+ * A canned answer that agrees with the data is a fast path; one that does not
+ * is a lie dressed as a demo.
+ *
+ * They exist because the live assistant runs on a daily neuron allowance, and
+ * a demo that dies halfway through a sentence is worse than one that never
+ * reached for the model. Anything typed that is not covered still goes live.
+ */
+function cannedAnswer(question) {
+  const posts = (D.posts || []).slice();
+  if (!posts.length) return null;
+
+  const num = (v) => Number(String(v ?? '0').replace(/[^0-9.]/g, '')) || 0;
+  const byLikes = [...posts].sort((a, b) => num(b.likes) - num(a.likes));
+  const top = byLikes[0];
+  const avg = Math.round(posts.reduce((t, p) => t + num(p.likes), 0) / posts.length);
+  const accounts = (D.accounts || []).map((a) => `${a.followers.toLocaleString()} on ${a.platform}`);
+  const q = question.toLowerCase();
+
+  if (/best|top|most view|performed|did well/.test(q)) {
+    const ratio = avg ? (num(top.likes) / avg).toFixed(1) : '\u2014';
+    return `"${top.title.trim()}" leads on ${num(top.likes).toLocaleString()} likes, against a ` +
+      `${avg.toLocaleString()} average across the last ${posts.length}, about ${ratio}x. ` +
+      `It ran as ${top.meta}. Reach is not public on this tier, so I cannot say how many people saw it.`;
+  }
+  if (/follower|audience|how many/.test(q)) {
+    return `${accounts.join(' and ')}. Those are captured figures rather than a live read: ` +
+      `Nova records a snapshot on every sweep, which is how the trend gets built at all.`;
+  }
+  if (/comment/.test(q)) {
+    const c = [...posts].sort((a, b) => num(b.comments) - num(a.comments))[0];
+    return `"${c.title.trim()}" drew the most comments, at ${num(c.comments)}. ` +
+      `Comments track replies far more closely than reach does, so a spike there usually means ` +
+      `the caption asked something, not that the post travelled further.`;
+  }
+  if (/post next|should we post|recommend/.test(q)) {
+    return `Your strongest posts are ${(top.meta.split(' \u00b7 ')[1] || 'video')} led. ` +
+      `On this tier I can see likes and comments but not reach or saves, so read that as a ` +
+      `pattern in engagement, not in how far a post travelled. Connect the account and I can ` +
+      `tell you which of the two is actually moving.`;
+  }
+  if (/march|compare|month|trend/.test(q)) {
+    return `There are ${(D.accounts || []).length} accounts on record and only a few snapshots so ` +
+      `far, so a month on month line would be drawn through too few points to mean anything. ` +
+      `Ask me again once the sweep has run for a couple of weeks.`;
+  }
+  return null;
+}
+
 async function ask(text) {
   const question = text.trim();
   if (!question || sending) return;
   if (nunuInput) nunuInput.value = '';
   addBubble('user', question);
+
+  // Precomputed first: instant, costs no model call, cannot fail mid-demo.
+  const canned = cannedAnswer(question);
+  if (canned) {
+    const pending = addBubble('bot', 'Thinking\u2026');
+    // A reply landing in the same frame as the question does not read as an
+    // answer, it reads as a lookup table. The pause is what makes it a reply.
+    setTimeout(() => {
+      if (pending) pending.textContent = canned;
+      history.push({ role: 'user', content: question });
+      history.push({ role: 'assistant', content: canned });
+    }, 520);
+    return;
+  }
 
   if (!NOVA.live()) {
     // Saying nothing was the old behaviour: the field kept the text, no request
