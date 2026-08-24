@@ -23,6 +23,24 @@ To drive the real API, click **sample data** in the header and paste the key.
 It is held in `sessionStorage` for that tab only and is sent to the worker and
 nowhere else.
 
+## Dashboard
+
+`dashboard.html` is where the flow lands. Tiles carry the summary, a ranked
+table shows top posts with in-row magnitude bars, and NuNu sits at the bottom.
+
+Two deliberate choices worth knowing:
+
+- **The follower trend is an empty state, not a sparkline.** There are two
+  snapshots so far, taken minutes apart. Drawing a line through them would
+  invent a shape the data does not have. It fills in as history accumulates,
+  which is also the honest product story.
+- **Platform identity is the label, not a colour.** Nova has one accent, and
+  inventing a second hue to separate Instagram from TikTok would break the
+  identity for no gain — the tiles are already named.
+
+NuNu needs the live API. Without a key it says so rather than returning a
+scripted answer, because a canned reply would misrepresent what it does.
+
 ## Design notes
 
 Nova's own tokens: white ground, `#0F0F14` ink, one `#4F46E5` accent, Plus

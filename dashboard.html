@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Your accounts — Nova</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0F0F14; --muted:#5C5C68; --faint:#9A9AA4;
+  --accent:#4F46E5; --accent-soft:#F1F0FE; --accent-wash:rgba(79,70,229,.10);
+  --line:#E8E8EC; --bg:#FFFFFF; --sunk:#FAFAFB;
+  --ok:#0F7B4F; --ok-soft:#E9F4EE; --warn:#8A6100; --warn-soft:#FDF6E7;
+  --sans:'Plus Jakarta Sans',system-ui,-apple-system,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+  --dur-in:500ms; --dur-out:340ms; --ease:cubic-bezier(0.16,1,0.3,1);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);
+     font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1120px;margin:0 auto;padding:0 32px}
+
+header{display:flex;align-items:center;justify-content:space-between;padding:26px 0;
+       border-bottom:1px solid var(--line)}
+.word{font-size:19px;font-weight:600;letter-spacing:.22em;color:var(--ink);text-decoration:none}
+.who{display:flex;align-items:center;gap:12px}
+.av{width:34px;height:34px;border-radius:50%;background:var(--accent-soft);color:var(--accent);
+    display:grid;place-items:center;font-size:13px;font-weight:600}
+.who b{font-size:14.5px;font-weight:500}
+.who span{font-family:var(--mono);font-size:12px;color:var(--muted);display:block;line-height:1.3}
+
+h1{font-size:34px;font-weight:200;letter-spacing:-.035em;margin:38px 0 6px}
+.sub{color:var(--muted);font-size:15.5px;margin:0 0 30px}
+
+/* Summary before detail: the numbers a brand opens this page for. */
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:16px}
+.tile{border:1px solid var(--line);border-radius:18px;padding:20px 22px}
+.tile .lbl{font-family:var(--mono);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;
+           color:var(--faint);display:block;margin-bottom:10px}
+.tile .val{font-family:var(--mono);font-size:30px;font-weight:500;letter-spacing:-.03em;
+           font-variant-numeric:tabular-nums;display:block;line-height:1.05}
+.tile .cap{font-size:12.5px;color:var(--muted);margin-top:7px}
+.chip{display:inline-block;font-family:var(--mono);font-size:10px;letter-spacing:.06em;
+      border-radius:999px;padding:2px 9px;border:1px solid currentColor}
+.chip.ok{color:var(--ok);background:var(--ok-soft)}
+.chip.pending{color:var(--warn);background:var(--warn-soft)}
+
+section{margin:38px 0}
+h2{font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.1em;
+   text-transform:uppercase;color:var(--faint);margin:0 0 14px}
+
+/* Trend is deliberately an empty state: two snapshots minutes apart is not a
+   line, and drawing one would invent a shape the data does not have. */
+.empty{border:1px dashed var(--line);border-radius:18px;padding:30px;text-align:center}
+.empty p{margin:0;color:var(--muted);font-size:14.5px;max-width:52ch;margin-inline:auto}
+.empty .big{font-family:var(--mono);font-size:13px;color:var(--faint);margin-bottom:8px}
+
+.tw{overflow-x:auto;border:1px solid var(--line);border-radius:18px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th{font-family:var(--mono);font-size:10.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;
+   color:var(--faint);text-align:left;padding:12px 16px;background:var(--sunk);white-space:nowrap}
+td{padding:13px 16px;border-top:1px solid var(--line);vertical-align:middle}
+tbody tr{transition:background var(--dur-out) var(--ease)}
+tbody tr:hover{background:var(--sunk);transition-duration:var(--dur-in)}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+.cap{max-width:340px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)}
+.plat{font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+
+/* Magnitude in-row: one hue, anchored to the cell's left edge, rounded data-end. */
+.bar{position:relative;height:22px;min-width:64px}
+.bar i{position:absolute;left:0;top:4px;height:14px;background:var(--accent-wash);
+       border-radius:3px 4px 4px 3px;display:block}
+.bar em{position:absolute;inset:0;display:flex;align-items:center;justify-content:flex-end;
+        font-family:var(--mono);font-size:12.5px;font-style:normal;font-variant-numeric:tabular-nums;
+        padding-right:6px}
+
+.locked{display:flex;gap:22px;flex-wrap:wrap;border:1px dashed var(--line);border-radius:18px;padding:20px 22px}
+.locked div{flex:1;min-width:230px}
+.locked h3{font-size:15px;font-weight:500;margin:0 0 6px}
+.locked p{margin:0;font-size:13.5px;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chips span{font-family:var(--mono);font-size:11px;color:var(--faint);border:1px solid var(--line);
+            border-radius:999px;padding:3px 10px}
+
+/* NuNu */
+.chat{border:1px solid var(--line);border-radius:20px;overflow:hidden}
+.chat .head{display:flex;align-items:center;gap:10px;padding:15px 20px;border-bottom:1px solid var(--line)}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--ok)}
+.chat .head b{font-size:14.5px;font-weight:500}
+.chat .head span{font-size:12.5px;color:var(--faint)}
+.log{padding:20px;display:flex;flex-direction:column;gap:12px;max-height:360px;overflow-y:auto}
+.msg{max-width:82%;padding:11px 15px;border-radius:14px;font-size:14.5px;white-space:pre-wrap;
+     animation:rise var(--dur-in) var(--ease) both}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.msg.me{align-self:flex-end;background:var(--accent);color:#fff}
+.msg.it{align-self:flex-start;background:var(--sunk);border:1px solid var(--line)}
+.meta{font-family:var(--mono);font-size:10.5px;color:var(--faint);margin-top:7px}
+.ask{display:flex;gap:10px;padding:15px 20px;border-top:1px solid var(--line)}
+.ask input{flex:1;font-family:inherit;font-size:14.5px;border:1px solid var(--line);border-radius:12px;
+           padding:11px 14px;outline:none;transition:border-color var(--dur-out) var(--ease)}
+.ask input:focus{border-color:var(--accent);transition-duration:var(--dur-in)}
+button{font-family:inherit;font-size:14px;font-weight:500;border-radius:12px;cursor:pointer;
+       transition:opacity var(--dur-out) var(--ease),border-color var(--dur-out) var(--ease)}
+button.go{background:var(--accent);border:1px solid var(--accent);color:#fff;padding:11px 20px}
+button.go:hover{opacity:.88;transition-duration:var(--dur-in)}
+button:active{transform:scale(.97)}
+.suggest{display:flex;gap:8px;flex-wrap:wrap;padding:0 20px 16px}
+.suggest button{background:none;border:1px solid var(--line);color:var(--muted);font-size:12.5px;padding:6px 13px}
+.suggest button:hover{border-color:var(--accent);color:var(--accent);transition-duration:var(--dur-in)}
+
+footer{border-top:1px solid var(--line);margin-top:50px;padding:22px 0 60px;color:var(--faint);font-size:13px}
+a{color:var(--accent)}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <a class="word" href="./">NOVA</a>
+  <div class="who">
+    <div class="av" id="av">DS</div>
+    <div><b id="brandName">—</b><span id="brandHandle">—</span></div>
+  </div>
+</header>
+
+<h1>Your accounts</h1>
+<p class="sub" id="sub">Public metrics, refreshed every six hours.</p>
+
+<div class="tiles" id="tiles"></div>
+
+<section>
+  <h2>Follower trend</h2>
+  <div class="empty" id="trend">
+    <p class="big">2 snapshots so far</p>
+    <p>A trend needs history, and the platforms don't keep it — TikTok's own analytics reach back seven days. Yours starts accumulating from today, so this fills in over the coming weeks.</p>
+  </div>
+</section>
+
+<section>
+  <h2>Top posts by views</h2>
+  <div class="tw"><table>
+    <thead><tr>
+      <th>Platform</th><th>Post</th><th class="num">Views</th>
+      <th class="num">Likes</th><th class="num">Comments</th>
+    </tr></thead>
+    <tbody id="rows"></tbody>
+  </table></div>
+</section>
+
+<section>
+  <h2>Not available on this tier</h2>
+  <div class="locked">
+    <div>
+      <h3>Connect the account to unlock</h3>
+      <p>These figures only exist for the account owner, so the platform will not show them to anyone else. Connecting proves ownership and unlocks them.</p>
+      <div class="chips"><span>reach</span><span>impressions</span><span>profile visits</span><span>saves &middot; Instagram</span></div>
+    </div>
+    <div>
+      <h3>Why they're missing</h3>
+      <p>Nothing here is scraped. Public counts come from official platform interfaces; the private ones are simply not rendered anywhere a visitor can see.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Ask NuNu</h2>
+  <div class="chat">
+    <div class="head"><span class="dot"></span><b>NuNu</b><span>· answers about your own accounts only</span></div>
+    <div class="log" id="log"></div>
+    <div class="suggest">
+      <button data-q="What were my top posts?">top posts</button>
+      <button data-q="How many followers do I have?">followers</button>
+      <button data-q="How do brands get paid on Nova?">payments</button>
+      <button data-q="Why cant I connect my Instagram account?">connecting</button>
+    </div>
+    <div class="ask">
+      <input id="q" placeholder="Ask about your performance…">
+      <button class="go" id="send">Ask</button>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <span id="mode">Sample data — real figures captured from the live API.</span>
+  &nbsp;·&nbsp; <a href="./">Start over</a>
+</footer>
+</div>
+<script src="./sample-data.js"></script>
+<script src="./dashboard.js"></script>
+</body>
+</html>
