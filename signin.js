@@ -13,11 +13,31 @@
   const error = document.getElementById('siError');
   if (!email || !password || !button) return;
 
-  // Already signed in and arriving at the front door again: don't make them
-  // type it twice.
+  /**
+   * Someone already signed in still gets the form.
+   *
+   * This used to redirect them straight through, which sounds helpful and is
+   * not: the sign-in page became unreachable in that tab. There was no way to
+   * look at it, no way to sign in as somebody else, and no way to check the
+   * thing you had just changed. Offer the shortcut, never take it for them.
+   */
   if (NOVA.signedIn()) {
-    location.replace(NOVA.isAdmin() ? './admin.html' : './dashboard.html');
-    return;
+    const where = NOVA.isAdmin() ? './admin.html' : './dashboard.html';
+    const bar = document.createElement('p');
+    bar.style.cssText =
+      'margin:20px 0 0;padding:13px 15px;background:#F2F2F5;border-radius:14px;' +
+      'font-size:13px;line-height:1.5;color:#5C5C68';
+    bar.innerHTML =
+      `Already signed in as <strong style="color:#0F0F14"></strong>. ` +
+      `<a href="${where}" style="font-weight:600">Continue</a> or ` +
+      `<a href="#" id="siOut" style="font-weight:600">sign out</a>.`;
+    bar.querySelector('strong').textContent = NOVA.email;
+    button.insertAdjacentElement('afterend', bar);
+    bar.querySelector('#siOut').addEventListener('click', (e) => {
+      e.preventDefault();
+      NOVA.signOut();
+      location.reload();
+    });
   }
 
   function fail(message) {

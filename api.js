@@ -45,43 +45,53 @@ const NOVA = (() => {
   const isAdmin = () => cfg.role === 'admin';
 
   /**
-   * Sign in, without the caller having to know which kind of account this is.
+   * Sign in.
    *
-   * Brands live in `brand_accounts` and admins in `admin_users`, behind two
-   * different endpoints. Asking the person to pick the right one first is
-   * asking them to know the schema: Dwayne typing a correct admin password into
-   * the brand form got "that email and password were not accepted", which is
-   * true and useless. Try the brand door, then the operator one.
+   * Two calls, not one. better-auth issues the session but knows nothing about
+   * this worker's internal key, and every route outside its namespace still
+   * needs one — so a browser holding only a session can call nothing. The
+   * bootstrap call trades the session for the right key: the fixed one for Nova
+   * staff, a key derived for their brand alone for everybody else.
+   *
+   * There is no separate operator login any more. Both kinds of account use
+   * this endpoint and are told apart by the role that comes back, which is why
+   * one form serves both. Dwayne typing a correct admin password into the brand
+   * form used to be answered "that email and password were not accepted".
    */
   async function login(email, password) {
-    const attempt = async (path) =>
-      fetch(`${cfg.url || DEFAULT_URL}${path}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
+    const base = cfg.url || DEFAULT_URL;
 
-    let res = await attempt('/api/v1/auth/login');
-    let role = 'brand';
-    if (res.status === 401) {
-      res = await attempt('/api/v1/admin/login');
-      role = 'admin';
-    }
-
+    const res = await fetch(`${base}/api/v1/auth/sign-in/email`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
     if (res.status === 401) throw new Error('That email and password were not accepted.');
     if (res.status === 429) throw new Error('Too many attempts. Wait a minute and try again.');
     if (!res.ok) throw new Error(`Sign-in failed — the worker answered ${res.status}.`);
 
-    const body = await res.json();
-    cfg.url = cfg.url || DEFAULT_URL;
-    cfg.token = body.token;
-    cfg.key = body.apiKey;
+    // The RAW token from the body, never the signed `set-auth-token` header.
+    // Sending the signed one authenticates nobody, and fails as a plain 401
+    // that looks exactly like a wrong password.
+    const { token } = await res.json();
+
+    const ready = await fetch(`${base}/api/v1/session/bootstrap`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!ready.ok) throw new Error('Signed in, but the worker would not hand over a key.');
+    const { apiKey, role, brands } = await ready.json();
+
+    cfg.url = base;
+    cfg.token = token;
+    cfg.key = apiKey;
     cfg.role = role;
     cfg.email = email;
-    // An operator is not scoped to a brand until they open one.
-    cfg.brandId = role === 'admin' ? '' : body.brandId;
+    cfg.brands = brands;
+    // An operator is not scoped to a brand until they open one. Somebody at
+    // exactly one brand starts there, because there is nothing to choose.
+    cfg.brandId = role === 'admin' ? '' : (brands[0]?.brandId ?? '');
     persist();
-    return { ...body, role };
+    return { token, role, brands };
   }
 
   function signOut() {
@@ -199,6 +209,7 @@ const NOVA = (() => {
   return {
     call, notice, login, signOut, signedIn, isAdmin, viewBrand, requireSignIn, consumeNext,
     get brandId() { return cfg.brandId || ''; },
+    get brands() { return cfg.brands || []; },
     get email() { return cfg.email || ''; },
     get url() { return cfg.url || DEFAULT_URL; },
   };
