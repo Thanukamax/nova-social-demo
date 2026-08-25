@@ -1,9 +1,10 @@
 /**
- * Real sign-in.
+ * The front door.
  *
- * The button used to navigate to the dashboard whatever you typed, which was
- * fine while every page read captured data. It is not fine now: the dashboard's
- * live calls need a session bound to a brand, and only a real login mints one.
+ * One form for two kinds of account. Brands live in `brand_accounts` and
+ * operators in `admin_users`, behind two different endpoints — but making the
+ * person choose the right one first is making them know the schema. NOVA.login
+ * tries both; this file only decides where the answer sends them.
  */
 (() => {
   const email = document.getElementById('siEmail');
@@ -11,6 +12,13 @@
   const button = document.getElementById('siGo');
   const error = document.getElementById('siError');
   if (!email || !password || !button) return;
+
+  // Already signed in and arriving at the front door again: don't make them
+  // type it twice.
+  if (NOVA.signedIn()) {
+    location.replace(NOVA.isAdmin() ? './admin.html' : './dashboard.html');
+    return;
+  }
 
   function fail(message) {
     error.textContent = message;
@@ -21,12 +29,6 @@
 
   async function submit() {
     error.hidden = true;
-
-    // Without the worker key there is nothing to sign in against, and a
-    // "wrong password" message would be a lie.
-    if (!NOVA.live() && !NOVA.promptForKey()) {
-      return fail('This build needs the worker key before it can sign anyone in.');
-    }
     if (!email.value.trim() || !password.value) {
       return fail('Enter your email and password.');
     }
@@ -34,8 +36,14 @@
     button.disabled = true;
     button.textContent = 'Signing in…';
     try {
-      await NOVA.login(email.value.trim(), password.value);
-      location.href = './dashboard.html';
+      const { role } = await NOVA.login(email.value.trim(), password.value);
+      // Resume whatever page sent them here, if anything did.
+      const next = NOVA.consumeNext();
+      if (next && next !== 'index.html' && next !== 'signin.html') {
+        location.href = `./${next}`;
+        return;
+      }
+      location.href = role === 'admin' ? './admin.html' : './dashboard.html';
     } catch (err) {
       fail(err.message || 'Sign-in failed.');
     }
@@ -45,8 +53,4 @@
   for (const field of [email, password]) {
     field.addEventListener('keydown', (e) => { if (e.key === 'Enter') submit(); });
   }
-
-  // Arriving with credentials already in the fragment should not make someone
-  // retype them just to prove the flow works.
-  if (NOVA.email) email.value = NOVA.email;
 })();

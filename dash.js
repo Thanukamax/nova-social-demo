@@ -11,7 +11,18 @@
  */
 const q = (s, r = document) => r.querySelector(s);
 const qa = (s, r = document) => [...r.querySelectorAll(s)];
-const D = window.DARAZ || { brand: 'Unknown', handle: 'unknown', posts: [] };
+if (!NOVA.requireSignIn()) throw new Error('redirecting to sign-in');
+
+/**
+ * The page's own starting figures.
+ *
+ * This used to be `window.DARAZ` — one brand's captured numbers, shipped in the
+ * bundle and rendered whenever a live read had not answered yet. Once the
+ * dashboard served more than that one brand, the fallback stopped being a
+ * placeholder and became a wrong answer with another company's name on it.
+ * Empty is the honest starting state.
+ */
+const D = { brand: '', handle: '', posts: [] };
 const POSTS = Array.isArray(D.posts) ? D.posts : [];
 const fmt = (n) => (typeof n === 'number' && Number.isFinite(n) ? n.toLocaleString('en-US') : '—');
 const num = (v) => {
@@ -262,8 +273,8 @@ async function loadInsight(post) {
   const suggestions = q('#dlgSuggestions');
   if (!head || !themes || !suggestions) return;
 
-  if (!NOVA.live()) {
-    head.textContent = 'Comment analysis runs live. Add #key=… to the URL to switch it on.';
+  if (!NOVA.signedIn()) {
+    head.textContent = 'Comment analysis needs a signed-in session.';
     note(themes, 'Nothing is shown here without a live read — the numbers would be invented.');
     note(suggestions, 'Suggestions come from the comments on this post, so they need a live read too.');
     return;
@@ -416,10 +427,10 @@ async function ask(text) {
     return;
   }
 
-  if (!NOVA.live()) {
+  if (!NOVA.signedIn()) {
     // Saying nothing was the old behaviour: the field kept the text, no request
     // was made, and the panel looked broken.
-    addBubble('bot', 'I answer from the live worker, and no key is set on this page. Add #key=… to the URL and ask again.');
+    addBubble('bot', 'That session has expired. Sign in again and ask me once more.');
     return;
   }
 

@@ -1,20 +1,23 @@
 /**
- * Shared connection to the Nova Social worker.
+ * The worker client.
  *
- * GitHub Pages is public and static, so the internal key cannot live in this
- * repository. It is supplied once at runtime and kept in sessionStorage for
- * that tab only.
+ * There used to be a shared internal key, and the browser could only get it
+ * from the URL — `#key=…` pasted into a one-click link. A key in a URL is in a
+ * browser history and a referrer log before the page has finished loading, and
+ * one leak was a leak for every brand at once.
  *
- * Prefer `#key=…`. A query string is sent to GitHub's servers with the document
- * request and again as the Referer of every subresource, so `?key=…` is in
- * someone else's access log before this file has run. A fragment never leaves
- * the browser. `?key=` still works because links to it exist, but it is
- * upgraded to the fragment form and the page says so.
+ * Now nothing here knows a key until someone signs in. The login response
+ * carries it: operators get the fixed internal key, brands get one derived for
+ * their brand alone. A brand never sees, types or manages its key.
+ *
+ * The key is not a secret from the person at this browser — anything the page
+ * sends is visible in devtools. What it buys is that no secret travels in a
+ * URL, that a leaked brand key names the brand it came from, and that a brand
+ * key cannot act as an operator.
  */
 const NOVA = (() => {
   const STORE = 'nova.social.cfg';
   const DEFAULT_URL = 'https://nova-social-worker-dev.thanukamax321.workers.dev';
-  const BRAND = 'brand_kandos_demo';
   const TIMEOUT_MS = 20000;
 
   /**
@@ -24,71 +27,72 @@ const NOVA = (() => {
    */
   const asObject = (raw) => {
     try {
-      const parsed = JSON.parse(raw || '{}');
-      return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+      const v = JSON.parse(raw ?? '{}');
+      return v && typeof v === 'object' && !Array.isArray(v) ? v : {};
     } catch {
       return {};
     }
   };
 
-  let cfg = {};
+  let cfg;
   try { cfg = asObject(sessionStorage.getItem(STORE)); } catch { cfg = {}; }
 
-  const url = new URL(location.href);
-  const hash = new URLSearchParams(url.hash.replace(/^#/, ''));
-  const fromHash = hash.get('key');
-  const fromQuery = url.searchParams.get('key');
-  const fromUrl = fromHash || fromQuery;
-
-  if (fromUrl) {
-    const api = hash.get('api') || url.searchParams.get('api') || cfg.url || DEFAULT_URL;
-    cfg = { key: fromUrl.trim(), url: api.replace(/\/$/, '') };
-    // Credentials ride the fragment for the same reason the key does: a query
-    // string reaches GitHub's access log before this file has run.
-    const u = hash.get('u');
-    const pw = hash.get('p');
-    if (u && pw) { cfg.email = u; cfg.password = pw; }
+  const persist = () => {
     try { sessionStorage.setItem(STORE, JSON.stringify(cfg)); } catch { /* private mode */ }
-    url.searchParams.delete('key'); url.searchParams.delete('api');
-    hash.delete('key'); hash.delete('api'); hash.delete('u'); hash.delete('p');
-    const rest = hash.toString();
-    url.hash = rest ? `#${rest}` : '';
-    history.replaceState(null, '', url.toString());
-  }
+  };
 
-  const live = () => Boolean(cfg.key);
-  const signedIn = () => Boolean(cfg.token);
+  const signedIn = () => Boolean(cfg.token && cfg.key);
+  const isAdmin = () => cfg.role === 'admin';
 
   /**
-   * Log in as a brand and keep the session for this tab.
+   * Sign in, without the caller having to know which kind of account this is.
    *
-   * The internal key proves the request came from Nova; it does not say WHICH
-   * brand is asking. Every /brands/{id}/* route is gated on a session bound to
-   * that brand, so the key alone answers 401 — which is exactly what this demo
-   * did on every live call once that gate shipped.
+   * Brands live in `brand_accounts` and admins in `admin_users`, behind two
+   * different endpoints. Asking the person to pick the right one first is
+   * asking them to know the schema: Dwayne typing a correct admin password into
+   * the brand form got "that email and password were not accepted", which is
+   * true and useless. Try the brand door, then the operator one.
    */
   async function login(email, password) {
-    const res = await fetch(`${cfg.url || DEFAULT_URL}/api/v1/auth/login`, {
-      method: 'POST',
-      headers: { 'x-nova-key': cfg.key, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
-    });
+    const attempt = async (path) =>
+      fetch(`${cfg.url || DEFAULT_URL}${path}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+    let res = await attempt('/api/v1/auth/login');
+    let role = 'brand';
+    if (res.status === 401) {
+      res = await attempt('/api/v1/admin/login');
+      role = 'admin';
+    }
+
     if (res.status === 401) throw new Error('That email and password were not accepted.');
+    if (res.status === 429) throw new Error('Too many attempts. Wait a minute and try again.');
     if (!res.ok) throw new Error(`Sign-in failed — the worker answered ${res.status}.`);
 
     const body = await res.json();
+    cfg.url = cfg.url || DEFAULT_URL;
     cfg.token = body.token;
-    // The session is bound to one brand, so the brand the dashboard reads must
-    // be the brand that logged in — never the hardcoded default.
-    cfg.brandId = body.brandId;
-    try { sessionStorage.setItem(STORE, JSON.stringify(cfg)); } catch { /* private mode */ }
-    return body;
+    cfg.key = body.apiKey;
+    cfg.role = role;
+    cfg.email = email;
+    // An operator is not scoped to a brand until they open one.
+    cfg.brandId = role === 'admin' ? '' : body.brandId;
+    persist();
+    return { ...body, role };
   }
 
   function signOut() {
-    delete cfg.token;
-    delete cfg.brandId;
-    try { sessionStorage.setItem(STORE, JSON.stringify(cfg)); } catch { /* ignore */ }
+    cfg = { url: cfg.url || DEFAULT_URL };
+    persist();
+  }
+
+  /** Which brand an operator is currently looking at. */
+  function viewBrand(brandId) {
+    cfg.brandId = brandId;
+    persist();
   }
 
   /* ---- status line ------------------------------------------------- */
@@ -107,7 +111,7 @@ const NOVA = (() => {
   let statusTimer = null;
 
   /**
-   * A rejected key used to be invisible: the fetch failed, the page kept the
+   * A rejected call used to be invisible: the fetch failed, the page kept the
    * design's figures and nothing said so. Any worker problem now says itself.
    */
   function notice(message, ms = 8000) {
@@ -123,14 +127,8 @@ const NOVA = (() => {
     if (ms) statusTimer = setTimeout(() => { statusEl.hidden = true; }, ms);
   }
 
-  async function call(path, init = {}, retried = false) {
-    if (!live()) throw new Error('no key');
-
-    // A session lasts 24h and this tab may outlive it. Rather than fail the
-    // call, sign in again from the credentials we already hold.
-    if (!signedIn() && cfg.email && cfg.password) {
-      try { await login(cfg.email, cfg.password); } catch { /* fall through to 401 */ }
-    }
+  async function call(path, init = {}) {
+    if (!signedIn()) throw new Error('Sign in first.');
 
     // A worker that never answers used to park the caller on a loading step
     // forever, because nothing else was going to fire.
@@ -145,28 +143,26 @@ const NOVA = (() => {
           ...(init.headers || {}),
           'x-nova-key': cfg.key,
           'Content-Type': 'application/json',
-          ...(cfg.token ? { Authorization: `Bearer ${cfg.token}` } : {}),
+          Authorization: `Bearer ${cfg.token}`,
         },
       });
-    } catch (err) {
+    } catch {
       throw new Error(abort.signal.aborted ? 'The worker did not answer in time.' : 'The worker could not be reached.');
     } finally {
       clearTimeout(timer);
     }
 
+    /**
+     * A lapsed session is not a broken deployment, but it cannot be repaired
+     * here either. The old client re-logged-in silently, which meant keeping
+     * the password in sessionStorage for the lifetime of the tab. Sending the
+     * person back to the front door costs one sign-in and stores no password.
+     */
     if (res.status === 401) {
-      // Expired session, not a bad key. Drop it and try once more — a 24h
-      // session quietly lapsing must not look like a broken deployment.
-      if (!retried && cfg.email && cfg.password) {
-        signOut();
-        return call(path, init, true);
-      }
-      throw new Error(
-        signedIn() || cfg.email
-          ? 'That session is no longer valid — sign in again.'
-          : 'Sign in first: this needs a brand session, not just the key.'
-      );
+      signOut();
+      throw new Error('That session has expired. Sign in again.');
     }
+    if (res.status === 403) throw new Error('This account cannot open that brand.');
     if (res.status === 429) throw new Error('Rate limited — wait a minute and try again.');
     if (!res.ok) throw new Error(`The worker answered ${res.status}.`);
     try {
@@ -176,23 +172,33 @@ const NOVA = (() => {
     }
   }
 
-  function promptForKey() {
-    const k = window.prompt('Paste the worker key to run live (64 hex characters). Cancel to stay on captured data.');
-    if (!k) return false;
-    cfg = { key: k.trim(), url: cfg.url || DEFAULT_URL };
-    try { sessionStorage.setItem(STORE, JSON.stringify(cfg)); } catch { /* ignore */ }
-    return true;
+  /**
+   * Send anyone without a session back to the front door.
+   *
+   * Called at the top of every page that reads brand data. The page it was
+   * heading for is remembered so signing in resumes it rather than dumping the
+   * person on a dashboard they did not ask for.
+   */
+  function requireSignIn() {
+    if (signedIn()) return true;
+    try { sessionStorage.setItem('nova.social.next', location.pathname.split('/').pop() || ''); } catch { /* ignore */ }
+    location.replace('./');
+    return false;
   }
 
-  if (fromQuery && !fromHash) {
-    notice('That key travelled in the URL query, which GitHub Pages logs. Use #key=… next time.', 10000);
+  function consumeNext() {
+    try {
+      const next = sessionStorage.getItem('nova.social.next');
+      sessionStorage.removeItem('nova.social.next');
+      return next || '';
+    } catch {
+      return '';
+    }
   }
 
   return {
-    live, call, notice, promptForKey, login, signOut, signedIn,
-    // Follows whoever is signed in, falling back to the demo brand so the
-    // captured-data pages still render before anyone logs in.
-    get brandId() { return cfg.brandId || BRAND; },
+    call, notice, login, signOut, signedIn, isAdmin, viewBrand, requireSignIn, consumeNext,
+    get brandId() { return cfg.brandId || ''; },
     get email() { return cfg.email || ''; },
     get url() { return cfg.url || DEFAULT_URL; },
   };

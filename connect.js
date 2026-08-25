@@ -5,6 +5,17 @@
  * steps, the same 1600ms lookup pause, the same platform tinting. The markup
  * and every inline style come from the design unchanged.
  */
+
+/**
+ * Onboarding is not a public page.
+ *
+ * This wizard was the site's landing page, so social.novadrop.lk opened on
+ * "Which account is yours?" — step 1 of 4 of a flow whose every later step
+ * needs an account. Anyone arriving cold was being asked to start something
+ * they could not finish.
+ */
+if (!NOVA.requireSignIn()) throw new Error('redirecting to sign-in');
+
 const q = (s, r = document) => r.querySelector(s);
 const qa = (s, r = document) => [...r.querySelectorAll(s)];
 
@@ -119,7 +130,7 @@ const actions = {
 
     // Live when a key is present: a real lookup replaces the design's timed
     // pause, and the step advances when the worker actually answers.
-    if (typeof NOVA !== 'undefined' && NOVA.live()) {
+    if (typeof NOVA !== 'undefined' && NOVA.signedIn()) {
       NOVA.call(`/api/v1/brands/${NOVA.brandId}/verify-handle`, {
         method: 'POST',
         body: JSON.stringify({

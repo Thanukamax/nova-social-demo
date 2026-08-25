@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>Operators — Nova Social</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200..800&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#EDEDF0;color:#0F0F14;
+  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Plus Jakarta Sans',system-ui,sans-serif}
+a{color:#4F46E5;text-decoration:none}
+a:hover{text-decoration:underline}
+[hidden]{display:none!important}
+
+.shell{max-width:860px;margin:0 auto;padding:34px 24px 96px}
+
+/* The masthead is not a card. It is a line of identity above the work. */
+.top{display:flex;align-items:center;gap:12px;padding-bottom:22px;border-bottom:1px solid #DEDEE4}
+.mark{width:30px;height:30px;border-radius:9px;background:#4F46E5;display:grid;place-items:center;flex:none}
+.who{margin-left:auto;display:flex;align-items:center;gap:14px;font-size:12.5px;color:#5C5C68}
+
+/* Sections are separated by rhythm, not by nesting another box inside a box. */
+section{margin-top:52px}
+section h2{margin:0;font-size:13px;font-weight:600;letter-spacing:.02em;text-transform:uppercase;color:#9A9AA4}
+section .lede{margin:9px 0 0;font-size:14.5px;line-height:1.6;color:#5C5C68;max-width:62ch}
+
+.rows{margin-top:20px;background:#FFFFFF;border:1px solid #E8E8EC;border-radius:8px;overflow:hidden}
+.row{display:flex;align-items:center;gap:18px;padding:17px 20px}
+.row + .row{border-top:1px solid #F0F0F3}
+.row .grow{min-width:0;flex:1}
+.name{font-size:14.5px;font-weight:600;letter-spacing:-.01em}
+.meta{margin-top:4px;font-size:12.5px;color:#9A9AA4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.empty{padding:30px 20px;font-size:14px;line-height:1.6;color:#9A9AA4}
+
+button{font-family:inherit;cursor:pointer;border-radius:12px;font-size:13px;font-weight:600;
+  padding:9px 15px;transition:background 340ms cubic-bezier(0.16,1,0.3,1),border-color 340ms cubic-bezier(0.16,1,0.3,1)}
+button[disabled]{opacity:.5;cursor:default}
+.primary{color:#FFFFFF;background:#4F46E5;border:none}
+.primary:hover:not([disabled]){background:#4338CA}
+.ghost{color:#0F0F14;background:#FFFFFF;border:1px solid #E8E8EC}
+.ghost:hover:not([disabled]){border-color:#0F0F14}
+.danger{color:#C2354A;background:#FFFFFF;border:1px solid #E8E8EC}
+.danger:hover:not([disabled]){border-color:#C2354A}
+
+.tag{font-size:11.5px;font-weight:600;letter-spacing:.02em;color:#5C5C68;
+  background:#F2F2F5;border-radius:999px;padding:4px 9px;flex:none}
+
+/* Shown once, after an approval. The password never appears again anywhere. */
+.once{margin-top:14px;background:#0F0F14;color:#FFFFFF;border-radius:12px;padding:15px 17px;font-size:13px;line-height:1.6}
+.once code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13.5px;
+  background:rgba(255,255,255,.12);border-radius:6px;padding:2px 7px}
+
+@media (prefers-reduced-motion:reduce){*{transition-duration:.01ms!important}}
+@media (max-width:640px){
+  .shell{padding:20px 14px 72px}
+  .row{flex-wrap:wrap;gap:10px}
+  .row .grow{flex-basis:100%}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <div class="top">
+    <span class="mark"><svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M21.6 3 4.4 10.8l6.3 2.1 2.1 6.3L21.6 3Z" fill="#FFFFFF"></path><path d="M21.6 3 10.7 12.9" stroke="#4F46E5" stroke-width="1.25" stroke-linecap="round"></path><path d="M2.4 15.6h4M4.6 18.9h2.6" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" opacity=".72"></path></svg></span>
+    <span style="font-size:19px;font-weight:700;letter-spacing:-.02em">nova</span>
+    <span style="font-size:18px;font-weight:500;letter-spacing:-.02em;color:#4F46E5">Social</span>
+    <span class="tag">Operator</span>
+    <span class="who"><span id="adWho"></span><button class="ghost" id="adOut">Sign out</button></span>
+  </div>
+
+  <section>
+    <h2>Waiting on you</h2>
+    <p class="lede">Brands that asked for social access. Approving one creates its account and issues a password you can only read once.</p>
+    <div class="rows" id="adRequests"><div class="empty">Loading…</div></div>
+    <div class="once" id="adOnce" hidden></div>
+  </section>
+
+  <section>
+    <h2>Brands</h2>
+    <p class="lede">Every account that exists. Opening one shows its dashboard as it sees it; the brand is not told you looked, but the worker logs it.</p>
+    <div class="rows" id="adBrands"><div class="empty">Loading…</div></div>
+  </section>
+
+</div>
+<script src="./api.js?v=2"></script>
+<script src="./admin.js?v=2"></script>
+</body>
+</html>
