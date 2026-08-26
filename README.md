@@ -4,6 +4,26 @@ The Nova Social screens from the Claude Design handoff, built as real pages.
 
 **Live:** https://thanukamax.github.io/nova-social-demo/
 
+## Getting started
+
+No install, no build step. Plain HTML/CSS/JS.
+
+```bash
+git clone https://github.com/Thanukamax/nova-social-demo.git
+cd nova-social-demo
+python3 -m http.server 8000      # http://localhost:8000
+```
+
+It calls the deployed dev worker by default (`DEFAULT_URL` in `api.js`), so
+there is nothing to run alongside it. Open `signin.html` first — every other
+screen needs a session.
+
+Working on this with an agent: **`AGENTS.md`** carries the rules, and
+`CLAUDE.md` / `GEMINI.md` point at it, so Claude Code, Antigravity/Gemini and
+Cursor all read the same file. The API contract lives in the worker's own
+`AGENTS.md` at `NovaDrop-lk/nova-social-worker`.
+
+
 | Page | Artboard |
 |---|---|
 | `index.html` | 1a connect flow, with 1b's namesake warning as a step-3 variant |
@@ -11,6 +31,9 @@ The Nova Social screens from the Claude Design handoff, built as real pages.
 | `signin.html` | 1f |
 | `request.html` | 1g |
 | `lockup.html` | 1d |
+| `campaigns.html` | Campaigns — paste post links, platform read off the URL |
+| `link-account.html` | Connect-flow entry point |
+| `admin.html` | Operator console — approve and reject access requests |
 | `review.html` | Review queue — not in the canvas; built from section 5 of the brief |
 
 ## How these were produced
