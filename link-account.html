@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>Connect an account — Nova Social</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200..800&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#EDEDF0;color:#0F0F14;
+  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Plus Jakarta Sans',system-ui,sans-serif}
+a{color:#4F46E5;text-decoration:none}
+a:hover{text-decoration:underline}
+[hidden]{display:none!important}
+
+.shell{max-width:860px;margin:0 auto;padding:34px 24px 96px}
+.top{display:flex;align-items:center;gap:12px;padding-bottom:22px;border-bottom:1px solid #DEDEE4}
+.mark{width:30px;height:30px;border-radius:9px;background:#4F46E5;display:grid;place-items:center;flex:none}
+.who{margin-left:auto;display:flex;align-items:center;gap:14px;font-size:12.5px;color:#5C5C68}
+
+section{margin-top:52px}
+section h2{margin:0;font-size:13px;font-weight:600;letter-spacing:.02em;text-transform:uppercase;color:#9A9AA4}
+section .lede{margin:9px 0 0;font-size:14.5px;line-height:1.6;color:#5C5C68;max-width:64ch}
+
+.rows{margin-top:20px;background:#FFFFFF;border:1px solid #E8E8EC;border-radius:8px;overflow:hidden}
+.row{display:flex;align-items:center;gap:16px;padding:17px 20px}
+.row + .row{border-top:1px solid #F0F0F3}
+.row .grow{min-width:0;flex:1}
+.name{font-size:14.5px;font-weight:600;letter-spacing:-.01em}
+.meta{margin-top:4px;font-size:12.5px;color:#9A9AA4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.avatar{width:38px;height:38px;border-radius:999px;flex:none;background:#F2F2F5;object-fit:cover}
+.empty{padding:30px 20px;font-size:14px;line-height:1.7;color:#9A9AA4;max-width:70ch}
+
+button{font-family:inherit;cursor:pointer;border-radius:12px;font-size:13px;font-weight:600;
+  padding:9px 15px;transition:background 340ms cubic-bezier(0.16,1,0.3,1),border-color 340ms cubic-bezier(0.16,1,0.3,1)}
+button[disabled]{opacity:.5;cursor:default}
+button:active:not([disabled]){transform:scale(.97)}
+.primary{color:#FFFFFF;background:#4F46E5;border:none}
+.primary:hover:not([disabled]){background:#4338CA}
+.ghost{color:#0F0F14;background:#FFFFFF;border:1px solid #E8E8EC}
+.ghost:hover:not([disabled]){border-color:#0F0F14}
+.danger{color:#C2354A;background:#FFFFFF;border:1px solid #E8E8EC}
+.danger:hover:not([disabled]){border-color:#C2354A}
+
+.tag{font-size:11.5px;font-weight:600;letter-spacing:.02em;color:#5C5C68;
+  background:#F2F2F5;border-radius:999px;padding:4px 9px;flex:none}
+.tag.ok{color:#0F7B4F;background:#E9F6F1}
+.tag.bad{color:#C2354A;background:#FBEDED}
+
+.panel{margin-top:20px;background:#FFFFFF;border:1px solid #E8E8EC;border-radius:8px;padding:22px 20px}
+.fields{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.field label{font-size:11.5px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;color:#9A9AA4}
+input,select{font-family:inherit;font-size:14px;color:#0F0F14;background:#FFFFFF;
+  border:1px solid #E8E8EC;border-radius:6px;padding:9px 11px;
+  transition:border-color 340ms cubic-bezier(0.16,1,0.3,1)}
+input:focus,select:focus{outline:none;border-color:#4F46E5}
+.act{margin-top:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.hint{font-size:12.5px;color:#9A9AA4}
+
+/* Each step appears only once the one before it has actually succeeded, so the
+   screen never offers a button that cannot work yet. */
+.step{margin-top:16px;border-top:1px solid #F0F0F3;padding-top:18px}
+.stepno{font-size:11.5px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;color:#9A9AA4}
+.found{margin-top:12px;display:flex;align-items:center;gap:14px}
+
+/* The bio code. Dark, monospaced, and selectable, because it has to be copied
+   into somebody's Instagram profile by hand. */
+.code{margin-top:12px;background:#0F0F14;color:#FFFFFF;border-radius:12px;padding:16px 18px}
+.code b{display:block;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:22px;
+  font-weight:600;letter-spacing:.04em;user-select:all}
+.code span{display:block;margin-top:9px;font-size:13px;line-height:1.6;color:#C4C4CC}
+
+.warn{margin-top:12px;background:#FDF6E7;border-radius:12px;padding:13px 15px;
+  font-size:13px;line-height:1.6;color:#7A5A12}
+.bad{margin-top:12px;background:#FBEDED;border-radius:12px;padding:13px 15px;
+  font-size:13px;line-height:1.6;color:#A02B3E}
+
+@media (prefers-reduced-motion:reduce){*{transition-duration:.01ms!important}}
+@media (max-width:640px){
+  .shell{padding:20px 14px 72px}
+  .row{flex-wrap:wrap;gap:10px}
+  .row .grow{flex-basis:100%}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <div class="top">
+    <span class="mark"><svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M21.6 3 4.4 10.8l6.3 2.1 2.1 6.3L21.6 3Z" fill="#FFFFFF"></path><path d="M21.6 3 10.7 12.9" stroke="#4F46E5" stroke-width="1.25" stroke-linecap="round"></path><path d="M2.4 15.6h4M4.6 18.9h2.6" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" opacity=".72"></path></svg></span>
+    <span style="font-size:19px;font-weight:700;letter-spacing:-.02em">nova</span>
+    <span style="font-size:18px;font-weight:500;letter-spacing:-.02em;color:#4F46E5">Social</span>
+    <span class="who">
+      <a href="./dashboard.html" data-go="./dashboard.html">Dashboard</a>
+      <a href="./campaigns.html" data-go="./campaigns.html">Campaigns</a>
+      <span id="lkWho"></span>
+      <button class="ghost" id="lkOut">Sign out</button>
+    </span>
+  </div>
+
+  <div class="rows" id="lkNoBrand" hidden>
+    <div class="empty">
+      This account is not looking at a brand yet. Open one from the
+      <a href="./admin.html" data-go="./admin.html">operator console</a> and come back.
+    </div>
+  </div>
+
+  <div id="lkBody">
+
+    <section>
+      <h2>Connected accounts</h2>
+      <p class="lede">What this brand is tracking. A first sync is queued the moment an account connects, so numbers appear a short while after, not instantly.</p>
+      <div class="rows" id="lkConns"><div class="empty">Loading…</div></div>
+    </section>
+
+    <section>
+      <h2>Connect an account</h2>
+      <p class="lede">Public tier: no login to the platform, no password. You prove the account is yours by putting a one-time code in its bio, which is what stops anyone claiming a handle they do not own.</p>
+
+      <div class="panel">
+        <div class="stepno">Step 1 · find it</div>
+        <div class="fields" style="margin-top:12px">
+          <div class="field">
+            <label for="lkPlat">Platform</label>
+            <select id="lkPlat">
+              <option value="instagram" selected>Instagram</option>
+              <option value="tiktok">TikTok</option>
+              <option value="youtube">YouTube</option>
+            </select>
+          </div>
+          <div class="field" style="flex:1 1 240px">
+            <label for="lkHandle">Handle</label>
+            <input id="lkHandle" type="text" placeholder="son_thanuka" spellcheck="false" autocapitalize="none">
+          </div>
+          <button class="ghost" id="lkLookup">Look it up</button>
+        </div>
+        <div class="hint" style="margin-top:10px">A lookup spends one vendor credit. The handle without the @, or paste the profile URL.</div>
+
+        <div class="step" id="lkStep2" hidden>
+          <div class="stepno">Step 2 · prove it is yours</div>
+          <div class="found" id="lkFound"></div>
+          <div class="warn" id="lkWarn" hidden></div>
+          <div class="act">
+            <button class="primary" id="lkClaim">This is ours, get the code</button>
+          </div>
+          <div class="code" id="lkCode" hidden></div>
+        </div>
+
+        <div class="step" id="lkStep3" hidden>
+          <div class="stepno">Step 3 · confirm</div>
+          <p class="hint" style="margin:10px 0 0;line-height:1.6">Add the code anywhere in the bio, save the profile, then check. The code can come straight back out once this passes.</p>
+          <div class="act">
+            <button class="primary" id="lkConfirm">I have added it, check now</button>
+            <span class="hint" id="lkAttempts"></span>
+          </div>
+          <div class="bad" id="lkRefusal" hidden></div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</div>
+<script src="./api.js?v=3"></script>
+<script src="./nav.js?v=3"></script>
+<script src="./link-account.js?v=1"></script>
+</body>
+</html>

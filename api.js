@@ -143,11 +143,19 @@ const NOVA = (() => {
     // A worker that never answers used to park the caller on a loading step
     // forever, because nothing else was going to fire.
     const abort = new AbortController();
-    const timer = setTimeout(() => abort.abort(), TIMEOUT_MS);
+    /**
+     * `/metrics` currently answers in 7 to 14 seconds and weighs two thirds of
+     * a megabyte, because it returns each row's whole `raw` provider blob. The
+     * flat 20s ceiling meant the dashboard intermittently timed out and drew
+     * nothing at all. Callers that know they are asking for something slow can
+     * say so, rather than every call paying for the slowest one.
+     */
+    const timer = setTimeout(() => abort.abort(), init.timeoutMs || TIMEOUT_MS);
     let res;
     try {
+      const { timeoutMs, ...rest } = init;
       res = await fetch(`${cfg.url || DEFAULT_URL}${path}`, {
-        ...init,
+        ...rest,
         signal: abort.signal,
         headers: {
           ...(init.headers || {}),
@@ -173,8 +181,28 @@ const NOVA = (() => {
       throw new Error('That session has expired. Sign in again.');
     }
     if (res.status === 403) throw new Error('This account cannot open that brand.');
-    if (res.status === 429) throw new Error('Rate limited — wait a minute and try again.');
-    if (!res.ok) throw new Error(`The worker answered ${res.status}.`);
+
+    /**
+     * A refusal usually explains itself and the explanation used to be thrown
+     * away. `confirm-handle` answers 409 with a `reason` naming exactly why
+     * ownership is not proven, and a caller that only saw "the worker answered
+     * 409" could not tell an expired claim from a code that is not in the bio.
+     * The parsed body rides along on the error so callers can say which.
+     */
+    if (!res.ok) {
+      let detail = null;
+      try { detail = await res.clone().json(); } catch { /* not JSON */ }
+      const message =
+        res.status === 429
+          ? 'Rate limited — wait a minute and try again.'
+          : detail && detail.error
+            ? detail.error
+            : `The worker answered ${res.status}.`;
+      const err = new Error(message);
+      err.status = res.status;
+      err.detail = detail;
+      throw err;
+    }
     try {
       return await res.json();
     } catch {

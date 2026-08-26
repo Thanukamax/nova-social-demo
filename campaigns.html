@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>Campaigns — Nova Social</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200..800&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#EDEDF0;color:#0F0F14;
+  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Plus Jakarta Sans',system-ui,sans-serif}
+a{color:#4F46E5;text-decoration:none}
+a:hover{text-decoration:underline}
+[hidden]{display:none!important}
+
+.shell{max-width:980px;margin:0 auto;padding:34px 24px 96px}
+
+.top{display:flex;align-items:center;gap:12px;padding-bottom:22px;border-bottom:1px solid #DEDEE4}
+.mark{width:30px;height:30px;border-radius:9px;background:#4F46E5;display:grid;place-items:center;flex:none}
+.who{margin-left:auto;display:flex;align-items:center;gap:14px;font-size:12.5px;color:#5C5C68}
+
+section{margin-top:52px}
+.shead{display:flex;align-items:flex-end;gap:16px}
+.shead .grow{flex:1;min-width:0}
+section h2{margin:0;font-size:13px;font-weight:600;letter-spacing:.02em;text-transform:uppercase;color:#9A9AA4}
+section .lede{margin:9px 0 0;font-size:14.5px;line-height:1.6;color:#5C5C68;max-width:64ch}
+
+.rows{margin-top:20px;background:#FFFFFF;border:1px solid #E8E8EC;border-radius:8px;overflow:hidden}
+.row{display:flex;align-items:center;gap:18px;padding:17px 20px;
+  transition:background 340ms cubic-bezier(0.16,1,0.3,1)}
+.row + .row{border-top:1px solid #F0F0F3}
+.row .grow{min-width:0;flex:1}
+.name{font-size:14.5px;font-weight:600;letter-spacing:-.01em}
+.meta{margin-top:4px;font-size:12.5px;color:#9A9AA4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* Selection is a state of the row, not a coloured stripe beside it. */
+.row.pick{cursor:pointer}
+.row.pick:hover{background:#FAFAFC}
+.row.on{background:#F5F4FE}
+.row.on .name{color:#4F46E5}
+
+.empty{padding:30px 20px;font-size:14px;line-height:1.7;color:#9A9AA4;max-width:70ch}
+.empty strong{color:#5C5C68;font-weight:600}
+
+button{font-family:inherit;cursor:pointer;border-radius:12px;font-size:13px;font-weight:600;
+  padding:9px 15px;transition:background 340ms cubic-bezier(0.16,1,0.3,1),border-color 340ms cubic-bezier(0.16,1,0.3,1)}
+button[disabled]{opacity:.5;cursor:default}
+button:active:not([disabled]){transform:scale(.97)}
+.primary{color:#FFFFFF;background:#4F46E5;border:none}
+.primary:hover:not([disabled]){background:#4338CA}
+.ghost{color:#0F0F14;background:#FFFFFF;border:1px solid #E8E8EC}
+.ghost:hover:not([disabled]){border-color:#0F0F14}
+
+.tag{font-size:11.5px;font-weight:600;letter-spacing:.02em;color:#5C5C68;
+  background:#F2F2F5;border-radius:999px;padding:4px 9px;flex:none}
+.tag.live{color:#0F7B4F;background:#E9F6F1}
+
+/* Forms ------------------------------------------------------------- */
+.panel{margin-top:20px;background:#FFFFFF;border:1px solid #E8E8EC;border-radius:8px;padding:22px 20px}
+.fields{display:flex;flex-wrap:wrap;gap:14px}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.field label{font-size:11.5px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;color:#9A9AA4}
+input,select,textarea{font-family:inherit;font-size:14px;color:#0F0F14;background:#FFFFFF;
+  border:1px solid #E8E8EC;border-radius:6px;padding:9px 11px;
+  transition:border-color 340ms cubic-bezier(0.16,1,0.3,1)}
+input:focus,select:focus,textarea:focus{outline:none;border-color:#4F46E5}
+textarea{width:100%;box-sizing:border-box;resize:vertical;min-height:132px;line-height:1.55;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px}
+.act{margin-top:16px;display:flex;align-items:center;gap:12px}
+.hint{font-size:12.5px;color:#9A9AA4}
+
+/* The paste report ---------------------------------------------------- */
+.report{margin-top:16px;border-top:1px solid #F0F0F3;padding-top:14px}
+.tally{font-size:14px;font-weight:600;letter-spacing:-.01em}
+.rline{display:flex;align-items:baseline;gap:10px;padding:7px 0;font-size:12.5px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.rline + .rline{border-top:1px solid #F6F6F8}
+.rline .u{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#5C5C68}
+.verdict{flex:none;font-weight:600}
+.ok{color:#0F7B4F}
+.no{color:#9A9AA4}
+
+/* Posts table --------------------------------------------------------- */
+.prow{display:grid;grid-template-columns:96px 1fr 150px 116px;align-items:center;gap:16px;
+  padding:14px 20px}
+.prow + .prow{border-top:1px solid #F0F0F3}
+.phead{padding:11px 20px;background:#FAFAFC;border-bottom:1px solid #E8E8EC;
+  font-size:11.5px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;color:#9A9AA4}
+.plat{font-size:12.5px;font-weight:600;color:#5C5C68}
+.pid{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px}
+.pwhen{font-size:12.5px;color:#9A9AA4;font-variant-numeric:tabular-nums}
+.pcre{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pcre.none{color:#C4C4CC}
+
+.filters{margin-top:20px;display:flex;flex-wrap:wrap;align-items:flex-end;gap:14px}
+.checks{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.check{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:#5C5C68;cursor:pointer}
+.check input{margin:0;accent-color:#4F46E5}
+
+.chips{margin-top:20px;display:flex;flex-wrap:wrap;gap:8px}
+.chip{font-family:inherit;font-size:13px;font-weight:500;color:#0F0F14;background:#FFFFFF;
+  border:1px solid #E8E8EC;border-radius:999px;padding:7px 14px;cursor:pointer;
+  transition:border-color 340ms cubic-bezier(0.16,1,0.3,1),background 340ms cubic-bezier(0.16,1,0.3,1)}
+.chip:hover{border-color:#0F0F14}
+.chip.on{background:#4F46E5;border-color:#4F46E5;color:#FFFFFF}
+
+@media (prefers-reduced-motion:reduce){*{transition-duration:.01ms!important}}
+@media (max-width:720px){
+  .shell{padding:20px 14px 72px}
+  .row{flex-wrap:wrap;gap:10px}
+  .row .grow{flex-basis:100%}
+  .shead{flex-direction:column;align-items:flex-start;gap:12px}
+  .prow{grid-template-columns:1fr auto;gap:4px 12px}
+  .prow .pid{grid-column:1/-1}
+  .phead{display:none}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <div class="top">
+    <span class="mark"><svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M21.6 3 4.4 10.8l6.3 2.1 2.1 6.3L21.6 3Z" fill="#FFFFFF"></path><path d="M21.6 3 10.7 12.9" stroke="#4F46E5" stroke-width="1.25" stroke-linecap="round"></path><path d="M2.4 15.6h4M4.6 18.9h2.6" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" opacity=".72"></path></svg></span>
+    <span style="font-size:19px;font-weight:700;letter-spacing:-.02em">nova</span>
+    <span style="font-size:18px;font-weight:500;letter-spacing:-.02em;color:#4F46E5">Social</span>
+    <span class="who">
+      <a href="./dashboard.html" data-go="./dashboard.html">Dashboard</a>
+      <a href="./link-account.html" data-go="./link-account.html">Connect</a>
+      <span id="cpWho"></span>
+      <button class="ghost" id="cpOut">Sign out</button>
+    </span>
+  </div>
+
+  <!-- Shown instead of everything else when an operator has not opened a brand. -->
+  <div class="rows" id="cpNoBrand" hidden>
+    <div class="empty">
+      This account is not looking at a brand yet. Open one from the
+      <a href="./admin.html" data-go="./admin.html">operator console</a> and come back.
+    </div>
+  </div>
+
+  <div id="cpBody">
+
+    <section>
+      <div class="shead">
+        <div class="grow">
+          <h2>Campaigns</h2>
+          <p class="lede">A campaign is a named bucket of posts you paid for. Pick one to see what is in it, or start a new one.</p>
+        </div>
+        <button class="ghost" id="cpNewToggle">New campaign</button>
+      </div>
+
+      <div class="panel" id="cpNewPanel" hidden>
+        <div class="fields">
+          <div class="field" style="flex:2 1 260px">
+            <label for="cpName">Name</label>
+            <input id="cpName" type="text" maxlength="200" placeholder="Avurudu 2026">
+          </div>
+          <div class="field">
+            <label for="cpType">Type</label>
+            <select id="cpType">
+              <option value="awareness">Awareness</option>
+              <option value="launch">Launch</option>
+              <option value="seasonal">Seasonal</option>
+              <option value="always_on">Always on</option>
+              <option value="other" selected>Other</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="cpStarts">Starts</label>
+            <input id="cpStarts" type="date">
+          </div>
+          <div class="field">
+            <label for="cpEnds">Ends</label>
+            <input id="cpEnds" type="date">
+          </div>
+        </div>
+        <div class="act">
+          <button class="primary" id="cpCreate">Create campaign</button>
+          <span class="hint">Dates are optional. It starts as a draft.</span>
+        </div>
+      </div>
+
+      <div class="rows" id="cpList"><div class="empty">Loading…</div></div>
+    </section>
+
+    <section>
+      <h2>Add posts</h2>
+      <p class="lede">Paste the links, one per line. The platform is read from the URL, so there is nothing to pick.</p>
+      <div class="panel" id="cpPastePanel">
+        <div id="cpPasteGate" class="empty" style="padding:0">Select a campaign above to paste links into it.</div>
+        <div id="cpPasteForm" hidden>
+          <textarea id="cpUrls" spellcheck="false" placeholder="https://www.tiktok.com/@creator/video/7300000000000000000
+https://www.instagram.com/p/CxAbCdEfGhI/
+https://www.youtube.com/watch?v=dQw4w9WgXcQ"></textarea>
+          <div class="act">
+            <button class="primary" id="cpAdd">Add to campaign</button>
+            <span class="hint" id="cpPasteHint">Up to 200 links in one go.</span>
+          </div>
+          <div class="report" id="cpReport" hidden></div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Posts</h2>
+      <p class="lede">Everything tracked for this brand, newest first. Filters narrow it; nothing here is invented, a blank creator means the platform did not name one.</p>
+
+      <div class="filters">
+        <div class="field">
+          <label for="fCampaign">Campaign</label>
+          <select id="fCampaign"><option value="">All campaigns</option></select>
+        </div>
+        <div class="field">
+          <label for="fCreator">Creator</label>
+          <select id="fCreator"><option value="">Anyone</option></select>
+        </div>
+        <div class="field">
+          <label for="fFrom">Added from</label>
+          <input id="fFrom" type="date">
+        </div>
+        <div class="field">
+          <label for="fTo">Added to</label>
+          <input id="fTo" type="date">
+        </div>
+        <div class="field">
+          <label for="fLimit">Show</label>
+          <select id="fLimit">
+            <option value="50">50</option>
+            <option value="200" selected>200</option>
+            <option value="500">500</option>
+          </select>
+        </div>
+        <div class="field" style="flex:1 1 220px">
+          <label>Platform</label>
+          <div class="checks">
+            <label class="check"><input type="checkbox" data-plat="instagram">Instagram</label>
+            <label class="check"><input type="checkbox" data-plat="tiktok">TikTok</label>
+            <label class="check"><input type="checkbox" data-plat="youtube">YouTube</label>
+            <label class="check"><input type="checkbox" data-plat="facebook">Facebook</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="act">
+        <button class="ghost" id="cpClear">Clear filters</button>
+        <span class="hint" id="cpCount"></span>
+      </div>
+
+      <div class="rows" id="cpPosts">
+        <div class="phead prow"><span>Platform</span><span>Post</span><span>Creator</span><span>Added</span></div>
+        <div class="empty">Loading…</div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Collabed creators</h2>
+      <p class="lede">Every creator named across this brand's campaigns. Selecting one filters the list above.</p>
+      <div class="chips" id="cpCreators"></div>
+      <div class="rows" id="cpCreatorsEmpty" hidden><div class="empty"></div></div>
+    </section>
+
+  </div>
+</div>
+<script src="./api.js?v=3"></script>
+<script src="./nav.js?v=2"></script>
+<script src="./campaigns.js?v=1"></script>
+</body>
+</html>

@@ -22,8 +22,8 @@ if (!NOVA.requireSignIn()) throw new Error('redirecting to sign-in');
  * placeholder and became a wrong answer with another company's name on it.
  * Empty is the honest starting state.
  */
-const D = { brand: '', handle: '', posts: [] };
-const POSTS = Array.isArray(D.posts) ? D.posts : [];
+let D = { brand: '', handle: '', posts: [] };
+let POSTS = Array.isArray(D.posts) ? D.posts : [];
 const fmt = (n) => (typeof n === 'number' && Number.isFinite(n) ? n.toLocaleString('en-US') : '—');
 const num = (v) => {
   const n = Number(String(v ?? '').replace(/[^\d.]/g, ''));
@@ -34,7 +34,10 @@ const safeUrl = (u) => (typeof u === 'string' && /^https?:\/\//i.test(u) ? u : n
 
 /* ---- identity and figures ---------------------------------------- */
 
-const avgComments = POSTS.length
+let avgComments = 0;
+
+function paintFigures() {
+avgComments = POSTS.length
   ? POSTS.reduce((a, p) => a + (num(p.comments) || 0), 0) / POSTS.length
   : 0;
 const totalLikes = POSTS.reduce((a, p) => a + (num(p.likes) || 0), 0);
@@ -75,6 +78,8 @@ qa('*').forEach((el) => {
     el.textContent = el.textContent.replace(/@kandos\.lk/g, `@${D.handle}`);
   }
 });
+}
+paintFigures();
 
 /* ---- post rows --------------------------------------------------- */
 
@@ -106,11 +111,11 @@ function fillRow(row, post) {
   row.dataset.post = encodeURIComponent(JSON.stringify(post));
 }
 
+const postTemplate = rowHost ? q('[data-postrow]', rowHost)?.cloneNode(true) : null;
+
 function fillPosts() {
-  if (!rowHost) return;
-  const template = q('[data-postrow]', rowHost);
-  if (!template) return;
-  const blank = template.cloneNode(true);
+  if (!rowHost || !postTemplate) return;
+  const blank = postTemplate.cloneNode(true);
   rowHost.textContent = '';
 
   if (!POSTS.length) {
@@ -122,6 +127,7 @@ function fillPosts() {
     return;
   }
 
+  q('.phead')?.removeAttribute('hidden');
   POSTS.forEach((post) => {
     const row = blank.cloneNode(true);
     fillRow(row, post);
@@ -536,3 +542,112 @@ document.addEventListener('keydown', (e) => {
   if (dialog?.open) { e.preventDefault(); dialog.close(); return; }
   if (nunuPanel?.classList.contains('nunu-max')) setNunuFull(false);
 });
+
+/* ---- live data ---------------------------------------------------- */
+
+/**
+ * The dashboard had no data source at all.
+ *
+ * `window.DARAZ` once supplied one brand's captured figures and was deleted
+ * when it started rendering under other brands' names, which was the right
+ * call. Nothing replaced it. `D` stayed the empty literal at the top of this
+ * file, so every figure on the page rendered as an em dash for every brand,
+ * and the post table stayed on its "no posts captured" state even when the
+ * worker held a full sweep. `/metrics` has carried the real series since the
+ * beginning and nothing in the browser ever called it.
+ */
+const dayOf = (iso) => {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+};
+
+function mapPost(p) {
+  const likes = typeof p.likes === 'number' ? p.likes : null;
+  const comments = typeof p.comments === 'number' ? p.comments : null;
+  const first = String(p.caption || '').split('\n')[0].trim();
+  return {
+    title: first ? (first.length > 72 ? `${first.slice(0, 71)}…` : first) : `Post ${p.postId}`,
+    meta: [dayOf(p.publishedAt), p.mediaType].filter(Boolean).join(' · '),
+    likes: fmt(likes),
+    comments: fmt(comments),
+    rate: '—',
+    permalink: p.permalink,
+    _likes: likes,
+    _comments: comments,
+  };
+}
+
+async function loadLive() {
+  const brandId = NOVA.brandId;
+  // An operator who has not opened a brand has nothing to draw. The design's
+  // own empty state is the honest answer, not a call with a blank id in it.
+  if (!brandId) return;
+
+  let connections = [];
+  let metrics = { accounts: [], posts: [] };
+
+  // Two reads, not one Promise.all. They fail independently and one of them is
+  // slow and large enough to fail on its own — pairing them meant a timed-out
+  // /metrics also threw away the connection list, and the page then looked
+  // like a brand that had connected nothing.
+  try {
+    const body = await NOVA.call(`/api/v1/brands/${encodeURIComponent(brandId)}/connections`);
+    connections = body.connections || [];
+  } catch (err) {
+    NOVA.notice(err.message);
+  }
+
+  try {
+    metrics =
+      (await NOVA.call(`/api/v1/brands/${encodeURIComponent(brandId)}/metrics`, {
+        timeoutMs: 45000,
+      })) || metrics;
+  } catch (err) {
+    // Say which read failed. "The worker did not answer in time" next to a page
+    // full of em dashes gave no clue that only the figures were missing.
+    NOVA.notice(`Figures could not be loaded — ${err.message}`);
+  }
+
+  const accounts = metrics.accounts || [];
+  const newest = accounts[0] || null;
+  const account =
+    connections.find((c) => c.platform === 'instagram') || connections[0] || null;
+
+  // Newest first. The worker returns this set oldest-first, and a dashboard
+  // that opens on a post from 2024 reads as stale data rather than an order.
+  const posts = (metrics.posts || [])
+    .slice()
+    .sort((x, y) => new Date(y.publishedAt || 0) - new Date(x.publishedAt || 0))
+    .map(mapPost);
+  const followers = newest && typeof newest.followers === 'number' ? newest.followers : null;
+
+  // The bar is relative to the best post in the set, not to an absolute scale,
+  // because the only useful comparison here is against this account's own run.
+  const best = posts.reduce((m, p) => Math.max(m, p._likes || 0), 0);
+  for (const post of posts) {
+    post.w = best ? `${Math.max(4, Math.round(((post._likes || 0) / best) * 100))}%` : '0%';
+    post.rate =
+      followers && (post._likes !== null || post._comments !== null)
+        ? `${((((post._likes || 0) + (post._comments || 0)) / followers) * 100).toFixed(1)}%`
+        : '—';
+  }
+
+  const known = posts.map((p) => p._likes).filter((n) => typeof n === 'number');
+  const brand = (NOVA.brands || []).find((b) => b.brandId === brandId);
+
+  D = {
+    brand: (brand && brand.name) || '',
+    handle: (account && account.accountHandle) || '',
+    followers,
+    avgLikes: known.length ? Math.round(known.reduce((a, b) => a + b, 0) / known.length) : null,
+    snapshots: accounts.length,
+    posts,
+  };
+  POSTS = posts;
+
+  paintFigures();
+  fillPosts();
+}
+
+loadLive();
